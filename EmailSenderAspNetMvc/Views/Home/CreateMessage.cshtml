@@ -1,0 +1,181 @@
+﻿@using EmailSenderAspNetMvc.Models.ViewModels
+@using EmailSenderAspNetMvc.Models.Domains
+
+@model EditEmailMessageViewModel
+
+@{
+    ViewBag.Title = Model.Heading;
+}
+
+<h2>@Model.Heading</h2>
+
+<div class="row">
+    <div class="col-lg-6">
+        @using (Html.BeginForm("CreateMessage", "Home", FormMethod.Post, new { id = "create-message-form" }))
+        {
+            @Html.AntiForgeryToken()
+
+            if (Model.EmailMessage.Id == 0)
+            {
+                <p class="alert alert-info mt-4 mb-4">
+                    Pola ... są <strong>wymagane</strong>
+                </p>
+            }
+
+            @Html.HiddenFor(x => x.EmailMessage.Id)
+            @Html.HiddenFor(x => x.EmailMessage.UserId)
+            @Html.HiddenFor(x => x.Save)
+            @Html.HiddenFor(x => x.Send)
+
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailMessage.EmailConfigurationId, new { @class = "mb-1" })
+                @Html.DropDownListFor(x => x.EmailMessage.EmailConfigurationId,
+                                        new SelectList(Model.EmailConfigurations, "Id", "Name"),
+                                        "-- Wybierz konto nadawcy --",
+                                        new { @class = "form-control" })
+                @Html.ValidationMessageFor(x => x.EmailMessage.EmailConfigurationId,
+                                            "",
+                                            new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailMessage.EmailMessageReceivers,
+                                new { @class = "mb-1" })
+                <div id="divPartial">
+                    @Html.Partial("_MessageReceivers", Model.EmailMessageReceivers)
+                </div>
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailMessage.Subject,
+                                new { @class = "mb-1" })
+                @Html.TextBoxFor(x => x.EmailMessage.Subject, new { @class = "form-control" })
+                @Html.ValidationMessageFor(x => x.EmailMessage.Subject,
+                                            "",
+                                            new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailMessage.Content,
+                                new { @class = "mb-1" })
+                @Html.TextAreaFor(x => x.EmailMessage.Content,
+                                    new
+                                         {
+                                             @class = "form-control",
+                                            style = "height: 20em"
+                                         })
+                @Html.ValidationMessageFor(x => x.EmailMessage.Content,
+                                            "",
+                                            new { @class = "text-danger" })
+            </div>
+
+            <button class="btn btn-primary btn-lg mt-2 mb-5"
+                    type="button"
+                    id="send-button">
+                Wyślij
+            </button>
+
+            <button class="btn btn-primary btn-lg mt-2 mb-5"
+                    type="button"
+                    id="save-button">
+                Zapisz
+            </button>
+
+
+
+        }
+    </div>
+
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+
+
+        $(document).ready(function () {
+            $('button').click(function (e) {
+                e.stopPropagation();
+            });
+
+
+            $('#send-button').click(function (e) {
+
+                e.preventDefault();
+                $("#Send").attr("value","true");
+                $('#create-message-form').submit();
+            });
+        });
+
+
+
+
+        function updateValue(input, value) {
+            input.attr("value", value);
+        }
+
+        function addEmailReceiver(emailMessageReceivers) {
+
+            let receivers = [];
+
+            emailMessageReceivers.each(function () {
+                receivers.push({
+                    EmailAddress: {
+                        Id: $(this).find('.email-receiver-id').attr('value'),
+                        Address: $(this).find('.email-receiver-address').attr('value'),
+                        DisplayName: $(this).find('.email-receiver-display-name').attr('value')
+                    }
+                });
+
+            });
+
+
+
+            $.ajax({
+                        type: 'POST',
+                        url: "@Url.Action("MessageReceivers", "Home")",
+                        data: {
+                            emailMessageReceivers: receivers
+                        },
+                        success: function (messageReceiversPartial) {
+                                    $("#divPartial").html(messageReceiversPartial)
+                                 },
+                        error: function (data) {
+                            alert(data.Message);
+                        }
+                    }
+            );
+
+
+        }
+
+        function deleteEmailReceiver(emailMessageReceiver) {
+
+            let id = $(this).find('.email-receiver-id').attr('value');
+
+             if(typeof(id) == "number" && id > 0 ) {
+                $.ajax({
+                    type: 'POST',
+                    url: "@Url.Action("DeleteEmailMessageReceiver", "Home")",
+                    data: {
+                        id: id
+                    },
+                    success: function (data) {
+                        if (data.Success) {
+                            emailMessageReceiver.remove();
+                        } else {
+                            alert(data.Message);
+                        }
+                    },
+                    error: function (data) {
+                        alert(data.Message);
+                    },
+                    dataType: 'json'
+                });
+            } else {
+                emailMessageReceiver.remove();
+            }
+        }
+    </script>
+}
