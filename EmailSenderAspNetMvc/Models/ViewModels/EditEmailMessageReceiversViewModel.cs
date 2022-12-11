@@ -7,11 +7,8 @@ using System.Web;
 
 namespace EmailSenderAspNetMvc.Models.ViewModels
 {
-    public class EditEmailMessageViewModel
+    public class EditEmailMessageReceiversViewModel
     {
-        public EmailMessage EmailMessage { get; set; }
-        public List<EmailConfiguration> EmailConfigurations { get; set; }
-
         [Display(Name = "Do")]
         public List<EmailMessageReceiver> EmailMessageReceiversTo { get; set; }
 
@@ -20,12 +17,5 @@ namespace EmailSenderAspNetMvc.Models.ViewModels
 
         [Display(Name = "UDW")]
         public List<EmailMessageReceiver> EmailMessageReceiversBcc { get; set; }
-
-        [Display(Name = "Załączniki")]
-        public List<HttpPostedFileBase> Attachments { get; set; }
-        public string Heading { get; set; }
-
-        public bool Send { get; set; }
-        public bool Save { get; set; }
     }
 }

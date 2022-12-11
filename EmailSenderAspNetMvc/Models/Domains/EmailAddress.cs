@@ -11,6 +11,7 @@ namespace EmailSenderAspNetMvc.Models.Domains
 {
     public class EmailAddress
     {
+        
         public EmailAddress()
         {
             EmailConfigurations = new Collection<EmailConfiguration>();
@@ -28,9 +29,12 @@ namespace EmailSenderAspNetMvc.Models.Domains
         [ForeignKey(nameof(User))]
         public string UserId { get; set; }
 
+        public bool IsDefined { get; set; }
+
 
         public ApplicationUser User { get; set; }
 
         public ICollection<EmailConfiguration> EmailConfigurations { get; set; }
+        public ICollection<EmailMessageReceiver> EmailMessageReceivers { get; set; }
     }
 }

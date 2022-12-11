@@ -8,6 +8,7 @@ namespace EmailSenderAspNetMvc.Models.Domains
     public enum EmailMessageReceiverType
     {
         To,
-        CC
+        CC,
+        BCC
     }
 }

@@ -24,7 +24,10 @@ namespace EmailSenderAspNetMvc.Models.Domains
         [Display(Name = "Wiadomość")]
         [Required(ErrorMessage = "Nie można wysłać pustej wiadomości")]
         public string Content { get; set; }
-        public bool IsBodyHtml { get; set; }
+        public bool IsBodyHtml { get; set; }        
+
+        [Display(Name = "Data zapisu")]
+        public DateTime? SaveDate { get; set; }
 
         [Display(Name = "Nadawca")]
         [Required(ErrorMessage = "Pole Nadawca jest wymagane")]

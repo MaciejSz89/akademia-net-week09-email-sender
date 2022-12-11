@@ -61,6 +61,12 @@ namespace EmailSenderAspNetMvc.Models
                 .HasForeignKey(x => x.EmailAddressId)
                 .WillCascadeOnDelete(false);
 
+            modelBuilder.Entity<EmailAddress>()
+               .HasMany(x => x.EmailMessageReceivers)
+               .WithRequired(x => x.EmailAddress)
+               .HasForeignKey(x => x.EmailAddressId)
+               .WillCascadeOnDelete(false);
+
 
             base.OnModelCreating(modelBuilder);
         }

@@ -26,7 +26,10 @@
                                 @Html.ActionLink("Ustawienia kont", "Configurations", "Home", null, new { @class = "dropdown-item" })
                             </li>
                             <li>
-                                @Html.ActionLink("Utwórz wiadomość", "CreateMessage", "Home", null, new { @class = "dropdown-item" })
+                                @Html.ActionLink("Utwórz wiadomość", "CreateMessage", "Home", new { id = "" }, new { @class = "dropdown-item" })
+                            </li>
+                            <li>
+                                @Html.ActionLink("Wersje robocze", "DraftMessages", "Home", null, new { @class = "dropdown-item" })
                             </li>
                         </ul>
                     </li>
@@ -55,7 +58,7 @@
     @Scripts.Render("~/bundles/jqueryval")
 
 
-   
+
     @RenderSection("scripts", required: false)
 
 </body>

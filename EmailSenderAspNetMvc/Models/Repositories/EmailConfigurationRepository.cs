@@ -10,7 +10,9 @@ namespace EmailSenderAspNetMvc.Models.Repositories
 {
     public class EmailConfigurationRepository
     {
+
         EmailAddressRepository _emailAddressRepository = new EmailAddressRepository();
+
         public EmailConfiguration GetEmailConfiguration(int id, string userId)
         {
             using (ApplicationDbContext context = new ApplicationDbContext())
@@ -61,16 +63,29 @@ namespace EmailSenderAspNetMvc.Models.Repositories
                                                    .Single(x => x.UserId == configuration.UserId
                                                              && x.Id == configuration.Id);
 
-
-                configurationToUpdate.EmailAddress = new EmailAddress
+                
+                if (configuration.EmailAddress.Id == 0)
                 {
-                    UserId = configuration.UserId,
-                    Address = configuration.EmailAddress.Address,
-                    DisplayName = configuration.EmailAddress.DisplayName
-                };
-
-                var oldAddressId = configurationToUpdate.EmailAddressId;
-                configurationToUpdate.EmailAddressId = 0;
+                    configurationToUpdate.EmailAddressId = 0;
+                    configurationToUpdate.EmailAddress = new EmailAddress
+                    {
+                        UserId = configuration.UserId,
+                        Address = configuration.EmailAddress.Address,
+                        DisplayName = configuration.EmailAddress.DisplayName,
+                        IsDefined = false
+                    };
+                }
+                else if (configuration.EmailAddress.IsDefined)
+                {
+                    configurationToUpdate.EmailAddressId = _emailAddressRepository.GetDefinedEmailAddress(configuration.EmailAddressId,
+                                                                                                          configuration.UserId)
+                                                                                  .Id;
+                    configurationToUpdate.EmailAddress = null;
+                }
+                else
+                {
+                    _emailAddressRepository.UpdateNotDefinedEmailAddress(configuration.EmailAddress);
+                }
 
                 configurationToUpdate.Password = configuration.Password;
                 ProtectPassword(configurationToUpdate);
@@ -78,9 +93,9 @@ namespace EmailSenderAspNetMvc.Models.Repositories
                 configurationToUpdate.Host = configuration.Host;
                 configurationToUpdate.Port = configuration.Port;
                 context.SaveChanges();
-
-                _emailAddressRepository.DeleteEmailAddress(oldAddressId, configuration.UserId);
             }
+
+            _emailAddressRepository.DeleteAllNotReferencedEmailAddresses(configuration.UserId);
         }
 
 
@@ -120,22 +135,15 @@ namespace EmailSenderAspNetMvc.Models.Repositories
                                                              && x.Id == id);
 
 
-                var addressToDeleteId = context.EmailAddresses
-                                             .Include(x => x.EmailConfigurations)
-                                             .Single(x => x.UserId == userId
-                                                       && x.Id == configurationToDelete.EmailAddressId)
-                                             .Id;
-
-
 
                 context.EmailConfigurations
                        .Remove(configurationToDelete);
 
                 context.SaveChanges();
 
-                _emailAddressRepository.DeleteEmailAddress(addressToDeleteId, userId);
-
             }
+
+            _emailAddressRepository.DeleteAllNotReferencedEmailAddresses(userId);
         }
     }
 }
