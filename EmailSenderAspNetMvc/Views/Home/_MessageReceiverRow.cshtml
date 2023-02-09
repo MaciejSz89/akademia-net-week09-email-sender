@@ -1,0 +1,158 @@
+﻿@using EmailSenderAspNetMvc.Models.Domains
+
+@if ((EmailMessageReceiverType)ViewBag.ReceiverType == @EmailMessageReceiverType.To)
+{
+    <div class="row email-receiver-to">
+        @Html.Hidden("EmailMessageReceiversTo[" + ((int)ViewBag.Index).ToString() + "].Id",
+                     "",
+                     new { @class = "email-receiver-id" })
+        @Html.Hidden("EmailMessageReceiversTo[" + ((int)ViewBag.Index).ToString() + "].EmailMessageId",
+                     ((int)ViewBag.MessageId).ToString(),
+                     new { @class = "email-receiver-message-id" })
+        @Html.Hidden("EmailMessageReceiversTo[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.Id",
+                     "",
+                     new { @class = "email-receiver-address-id" })
+        @Html.Hidden("EmailMessageReceiversTo[" + ((int)ViewBag.Index).ToString() + "].EmailMessageReceiverType",
+                     "",
+                     new { @class = "email-receiver-type" })
+        <div class="col-4">
+            @Html.TextBox("EmailMessageReceiversTo[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.DisplayName",
+                          "",
+                          new
+                          {
+                              @class = "form-control email-receiver-display-name mb-2",
+                              onfocusout = "updateValue($(this), this.value)",
+                              placeholder = "Nazwa odbiorcy"
+                          })
+            @Html.ValidationMessage("EmailMessageReceiversTo[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.DisplayName",
+                                        (string)ViewBag.DisplayNameValidationMessage,
+                                        new { @class = "text-danger" })
+        </div>
+        <div class="col-6">
+            @Html.TextBox("EmailMessageReceiversTo[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.Address",
+                          "",
+                          new
+                          {
+                              @class = "form-control email-receiver-address mb-2",
+                              onfocusout = "updateValue($(this), this.value)",
+                              placeholder = "Email odbiorcy"
+                          })
+            @Html.ValidationMessage("EmailMessageReceiversTo[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.Address",
+                                        (string)ViewBag.AddressValidationMessage,
+                                        new { @class = "text-danger" })
+        </div>
+        <div class="col-2">
+            <button type="button"
+                    class="btn btn-danger"
+                    onclick='deleteEmailReceiver($(this).parents(".email-receiver-to"))'>
+                Usuń
+            </button>
+        </div>
+
+    </div>
+}
+@if ((EmailMessageReceiverType)ViewBag.ReceiverType == @EmailMessageReceiverType.CC)
+{
+    <div class="row email-receiver-cc">
+        @Html.Hidden("EmailMessageReceiversCc[" + ((int)ViewBag.Index).ToString() + "].Id",
+                     "",
+                     new { @class = "email-receiver-id" })
+        @Html.Hidden("EmailMessageReceiversCc[" + ((int)ViewBag.Index).ToString() + "].EmailMessageId",
+                     ((int)ViewBag.MessageId).ToString(),
+                     new { @class = "email-receiver-message-id" })
+        @Html.Hidden("EmailMessageReceiversCc[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.Id",
+                     "",
+                     new { @class = "email-receiver-address-id" })
+        @Html.Hidden("EmailMessageReceiversCc[" + ((int)ViewBag.Index).ToString() + "].EmailMessageReceiverType",
+                     "",
+                     new { @class = "email-receiver-type" })
+        <div class="col-4">
+            @Html.TextBox("EmailMessageReceiversCc[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.DisplayName",
+                          "",
+                          new
+                          {
+                              @class = "form-control email-receiver-display-name mb-2",
+                              onfocusout = "updateValue($(this), this.value)",
+                              placeholder = "Nazwa odbiorcy"
+                          })
+            @Html.ValidationMessage("EmailMessageReceiversCc[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.DisplayName",
+                                        (string)ViewBag.DisplayNameValidationMessage,
+                                        new { @class = "text-danger" })
+        </div>
+        <div class="col-6">
+            @Html.TextBox("EmailMessageReceiversCc[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.Address",
+                          "",
+                          new
+                          {
+                              @class = "form-control email-receiver-address mb-2",
+                              onfocusout = "updateValue($(this), this.value)",
+                              placeholder = "Email odbiorcy"
+                          })
+            @Html.ValidationMessage("EmailMessageReceiversCc[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.Address",
+                                        (string)ViewBag.AddressValidationMessage,
+                                        new { @class = "text-danger" })
+        </div>
+        <div class="col-2">
+            <button type="button"
+                    class="btn btn-danger"
+                    onclick='deleteEmailReceiver($(this).parents(".email-receiver-cc"))'>
+                Usuń
+            </button>
+        </div>
+
+    </div>
+}
+
+@if ((EmailMessageReceiverType)ViewBag.ReceiverType == @EmailMessageReceiverType.BCC)
+{
+    <div class="row email-receiver-bcc">
+        @Html.Hidden("EmailMessageReceiversBcc[" + ((int)ViewBag.Index).ToString() + "].Id",
+                     "",
+                     new { @class = "email-receiver-id" })
+        @Html.Hidden("EmailMessageReceiversBcc[" + ((int)ViewBag.Index).ToString() + "].EmailMessageId",
+                     ((int)ViewBag.MessageId).ToString(),
+                     new { @class = "email-receiver-message-id" })
+        @Html.Hidden("EmailMessageReceiversBcc[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.Id",
+                     "",
+                     new { @class = "email-receiver-address-id" })
+        @Html.Hidden("EmailMessageReceiversBcc[" + ((int)ViewBag.Index).ToString() + "].EmailMessageReceiverType",
+                     "",
+                     new { @class = "email-receiver-type" })
+        <div class="col-4">
+            @Html.TextBox("EmailMessageReceiversBcc[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.DisplayName",
+                          "",
+                          new
+                          {
+                              @class = "form-control email-receiver-display-name mb-2",
+                              onfocusout = "updateValue($(this), this.value)",
+                              placeholder = "Nazwa odbiorcy"
+                          })
+            @Html.ValidationMessage("EmailMessageReceiversBcc[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.DisplayName",
+                                     null,
+                                     new { @class = "text-danger" })
+        </div>
+        <div class="col-6">
+            @Html.TextBox("EmailMessageReceiversBcc[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.Address",
+                          "",
+                          new
+                          {
+                              @class = "form-control email-receiver-address mb-2",
+                              onfocusout = "updateValue($(this), this.value)",
+                              placeholder = "Email odbiorcy"
+                          })
+            @Html.ValidationMessage("EmailMessageReceiversBcc[" + ((int)ViewBag.Index).ToString() + "].EmailAddress.Address",
+                                        null,
+                                        new { @class = "text-danger" })
+        </div>
+        <div class="col-2">
+            <button type="button"
+                    class="btn btn-danger"
+                    onclick='deleteEmailReceiver($(this).parents(".email-receiver-bcc"))'>
+                Usuń
+            </button>
+        </div>
+
+    </div>
+}
+
+

@@ -1,0 +1,84 @@
+﻿@using EmailSenderAspNetMvc.Models.Domains
+
+@model ICollection<EmailConfiguration>
+@{
+    ViewBag.Title = "Ustawienia kont";
+}
+
+
+
+<h2 class="mb-3">Ustawienia kont</h2>
+
+<button type="button"
+        class="btn btn-primary mb-2"
+        onclick='window.location.href = "@Url.Action("Configuration", "Configuration")"'>
+    Dodaj konto
+</button>
+
+@if ((Model != null) && (Model.Count > 0))
+{
+    <table class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Nazwa konta</th>
+                <th scope="col">Email</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (EmailConfiguration configuration in Model)
+            {
+                <tr onclick='window.location.href="@Url.Action("Configuration", "Configuration", new { id = configuration.Id })"'>
+                    <td class="fw-bold text-primary">@configuration.Name </td>
+                    <td>@configuration.EmailAddress.Address</td>
+                    <td>
+                        <button type="button"
+                                class="btn btn-danger"
+                                onclick='deleteConfiguration(@configuration.Id, "@configuration.Name", this)'>
+                            Usuń
+                        </button>
+                    </td>
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+}
+
+@section Scripts
+{
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            $('button').click(function (e) {
+                e.stopPropagation();
+            });
+        });
+
+        function deleteConfiguration(id, name, btn) {
+            if (!confirm("Czy na pewno chcesz usunąć konto " + name + "?"))
+                return;
+
+            $.ajax({
+                type: 'POST',
+                url: "@Url.Action("DeleteConfiguration", "Configuration")",
+                data: {
+                    id: id
+                },
+                success: function (data) {
+                    if (data.Success) {
+                        var row = btn.parentNode.parentNode;
+                        row.parentNode.removeChild(row);
+                    } else {
+                        alert(data.Message);
+                    }
+                },
+                error: function (data) {
+                    alert(data.Message);
+                },
+                dataType: 'json'
+            });
+        }
+    </script>
+}

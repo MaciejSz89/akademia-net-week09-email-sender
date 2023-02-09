@@ -1,0 +1,113 @@
+﻿@using EmailSenderAspNetMvc.Models.Domains
+
+@model ICollection<EmailMessage>
+
+@{
+    ViewBag.Title = "Wersje robocze";
+}
+
+<h2 class="mb-3">Wersje robocze</h2>
+
+@if ((Model != null) && (Model.Count > 0))
+{
+    <table class="table table-hover table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Od</th>
+                <th scope="col">Do</th>
+                <th scope="col" style="min-width: 150px;">Ostatnia edycja</th>
+                <th scope="col"></th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (EmailMessage message in Model)
+            {
+            <tr onclick='window.location.href="@Url.Action("CreateMessage", "Message", new { id = message.Id })"'>
+                <td class="fw-bold text-primary">
+                    @message.EmailConfiguration.EmailAddress.DisplayName &lt;@(message.EmailConfiguration.EmailAddress.Address)&gt;
+                </td>
+                <td>
+                    @if (@message.EmailMessageReceivers.Count > 0)
+                    {
+                        var diplayedReceiversAmount = 2;
+
+                        for (int i = 0; i < @message.EmailMessageReceivers.Count; i++)
+                        {
+                            <text>
+                                @message.EmailMessageReceivers.ElementAt(i).EmailAddress.DisplayName  &lt;@(message.EmailMessageReceivers.ElementAt(i).EmailAddress.Address)&gt;
+                                @if (i < @message.EmailMessageReceivers.Count - 1)
+                                {
+                                    <text>;</text>
+                                }
+
+                                @if (i + 1 == diplayedReceiversAmount
+                                    && diplayedReceiversAmount < @message.EmailMessageReceivers.Count)
+                                {
+                                    <text>+@(message.EmailMessageReceivers.Count - diplayedReceiversAmount)</text>
+                                    break;
+                                }
+                                <br />
+                            </text>
+
+                        }
+
+                    }
+
+                </td>
+                <td>
+                    @if (message.SaveDate != null)
+                    {
+                        @(((DateTime)message.SaveDate).ToString("dd-MM-yyyy HH:mm"))
+                    }
+                </td>
+                <td>
+                    <button type="button"
+                            class="btn btn-danger"
+                            onclick='deleteMessage(@message.Id, this)'>
+                        Usuń
+                    </button>
+                </td>
+            </tr>
+            }
+
+        </tbody>
+
+    </table>
+}
+
+@section Scripts
+{
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            $('button').click(function (e) {
+                e.stopPropagation();
+            });
+        });
+
+        function deleteMessage(id, btn) {
+            if (!confirm("Czy na pewno chcesz usunąć wiadomość?"))
+                return;
+
+            $.ajax({
+                type: 'POST',
+                url: "@Url.Action("DeleteMessage", "Message")",
+                data: {
+                    id: id
+                },
+                success: function (data) {
+                    if (data.Success) {
+                        var row = btn.parentNode.parentNode;
+                        row.parentNode.removeChild(row);
+                    } else {
+                        alert(data.Message);
+                    }
+                },
+                error: function (data) {
+                    alert(data.Message);
+                },
+                dataType: 'json'
+            });
+        }
+    </script>
+}

@@ -1,0 +1,138 @@
+﻿@using EmailSenderAspNetMvc.Models.ViewModels
+@using EmailSenderAspNetMvc.Models.Domains
+
+@model EditEmailConfigurationViewModel
+
+@{
+    ViewBag.Title = Model.Heading;
+}
+
+<h2 class="mb-2">@Model.Heading</h2>
+
+<div class="row">
+    <div class="col-lg-6">
+        @using (Html.BeginForm("Configuration", "Configuration"))
+        {
+            @Html.AntiForgeryToken()
+
+            if (Model.EmailConfiguration.Id == 0)
+            {
+                <p class="alert alert-info mt-4 mb-4">
+                    Pola nazwa konta, email, hasło, serwer SMTP oraz port są <strong>wymagane</strong>
+                </p>
+            }
+
+            @Html.HiddenFor(x => x.EmailConfiguration.Id)
+            @Html.HiddenFor(x => x.EmailConfiguration.EmailAddress.Id)
+            @Html.HiddenFor(x => x.EmailConfiguration.UserId)
+            @Html.HiddenFor(x => x.EmailConfiguration.EmailAddress.UserId)
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailConfiguration.Name,
+                               new { @class = "mb-1" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(x => x.EmailConfiguration.Name,
+                                     new
+                                          {
+                                              @class = "form-control",
+                                           autofocus = "autofocus"
+                                          })
+                    @Html.ValidationMessageFor(x => x.EmailConfiguration.Name,
+                                                "",
+                                                new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailConfiguration.EmailAddress.DisplayName,
+                                new { @class = "mb-1" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(x => x.EmailConfiguration.EmailAddress.DisplayName,
+                                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(x => x.EmailConfiguration.EmailAddress.DisplayName,
+                                                    "",
+                                                    new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailConfiguration.EmailAddress.Address,
+                                new { @class = "mb-1" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(x => x.EmailConfiguration.EmailAddress.Address,
+                                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(x => x.EmailConfiguration.EmailAddress.Address,
+                                                "",
+                                                new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailConfiguration.Password,
+                                new { @class = "mb-1" })
+                <div class="col-md-10">
+                    @Html.PasswordFor(x => x.EmailConfiguration.Password,
+                                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(x => x.EmailConfiguration.Password,
+                                        "",
+                                        new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailConfiguration.SmtpHost,
+                                new { @class = "mb-1" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(x => x.EmailConfiguration.SmtpHost,
+                                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(x => x.EmailConfiguration.SmtpHost,
+                                                    "",
+                                                    new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailConfiguration.SmtpPort,
+                                new { @class = "mb-1" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(x => x.EmailConfiguration.SmtpPort,
+                                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(x => x.EmailConfiguration.SmtpPort,
+                                        "",
+                                        new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailConfiguration.ImapHost,
+                                new { @class = "mb-1" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(x => x.EmailConfiguration.ImapHost,
+                                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(x => x.EmailConfiguration.ImapHost,
+                                                    "",
+                                                    new { @class = "text-danger" })
+                </div>
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailConfiguration.ImapPort,
+                                new { @class = "mb-1" })
+                <div class="col-md-10">
+                    @Html.TextBoxFor(x => x.EmailConfiguration.ImapPort,
+                                        new { @class = "form-control" })
+                    @Html.ValidationMessageFor(x => x.EmailConfiguration.ImapPort,
+                                        "",
+                                        new { @class = "text-danger" })
+                </div>
+            </div>
+
+
+            <button class="btn btn-primary btn-lg mt-2 mb-5" type="submit">
+                Zapisz
+            </button>
+
+        }
+    </div>
+
+</div>

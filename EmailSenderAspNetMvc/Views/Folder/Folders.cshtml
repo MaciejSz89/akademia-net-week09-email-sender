@@ -1,0 +1,284 @@
+﻿@using MailKit
+@using EmailSenderAspNetMvc.Models.Domains
+
+@model IEnumerable<EmailFolder>
+
+@{
+    ViewBag.Title = "Skrzynka pocztowa";
+}
+
+
+
+
+<div class="row">
+    <div class="just-padding col-lg-3">
+        <h2>Skrzynka pocztowa</h2>
+        <div class="list-group list-group-root well">
+            @ShowTree(Model)
+        </div>
+    </div>
+    <div id="messages"
+         class="just-padding col-9">
+
+    </div>
+</div>
+
+
+@helper ShowTree(IEnumerable<EmailFolder> folders)
+{
+    foreach (var folder in folders)
+    {
+
+        if ((folder.Attributes & FolderAttributes.NonExistent) == 0)
+        {
+            if ((folder.EmailFolders == null
+              || folder.EmailFolders.Count == 0
+              || (folder.Attributes & FolderAttributes.HasNoChildren) != 0))
+            {
+                <a href="#"
+                   class="list-group-item"
+                   onclick="showMessages(@folder.Id, $(this))">
+                    <span class="ms-3">
+                        @FolderIcon(folder.Attributes)
+                        @folder.Name
+                    </span>
+                </a>
+            }
+            else
+            {
+                <a href="#folder-@folder.Id"
+                   class="list-group-item collapsed"
+                   data-bs-toggle="collapse"
+                   onclick="showMessages(@folder.Id, $(this))">
+                    <i class="bi bi-chevron-right"></i>
+                    <span>
+                        @FolderIcon(folder.Attributes)
+                        @folder.Name
+                    </span>
+                </a>
+                <div class="list-group collapse" id="folder-@folder.Id">
+                    @ShowTree(folder.EmailFolders)
+                </div>
+            }
+        }
+
+
+
+    }
+}
+
+
+@helper FolderIcon(FolderAttributes attributes)
+{
+    if (attributes.HasFlag(FolderAttributes.Inbox))
+    {
+        <i class="bi bi-inbox"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Flagged))
+    {
+        <i class="bi bi-star"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Sent))
+    {
+        <i class="bi bi-send"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Drafts))
+    {
+        <i class="bi bi-file-earmark"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Junk))
+    {
+        <i class="bi bi-exclamation-octagon"></i>
+    }
+    else if (attributes.HasFlag(FolderAttributes.Trash))
+    {
+        <i class="bi bi-trash"></i>
+    }
+    else if (attributes.HasFlag(FolderAttributes.All))
+    {
+        <i class="bi bi-envelope"></i>
+    }
+    else
+    {
+        <i class="bi bi-folder"></i>
+    }
+}
+
+
+
+@section Scripts
+{
+    <script type="text/javascript">
+
+        $(function () {
+            (function ($) {
+                var MutationObserver = window.MutationObserver || window.WebKitMutationObserver || window.MozMutationObserver;
+
+                $.fn.attrchange = function (callback) {
+                    if (MutationObserver) {
+                        var options = {
+                            subtree: false,
+                            attributes: true
+                        };
+
+                        var observer = new MutationObserver(function (mutations) {
+                            mutations.forEach(function (e) {
+                                callback.call(e.target, e.attributeName);
+                            });
+                        });
+
+                        return this.each(function () {
+                            observer.observe(this, options);
+                        });
+
+                    }
+                }
+            })(jQuery);
+
+
+            $(document).ready(function () {
+
+                setLastItemClass();
+
+
+                $('.list-group').attrchange(function (attrName) {
+
+                    if (attrName == 'class') {
+                        setLastItemClass();
+                        setCollapseIcon();
+                    }
+
+
+                });
+            });
+
+            $('.list-group-item').on('click', function () {
+                $('.bi', this)
+                    .toggleClass('bi-chevron-right')
+                    .toggleClass('bi-chevron-down');
+            });
+
+
+        });
+
+        function setLastItemClass() {
+
+            let items = $('.list-group-item');
+
+            items.removeClass('list-group-item-last');
+
+
+            for (let i = items.length - 1; i >= 0; i--) {
+                let item = $(items[i]);
+
+
+                if ((item.parents('.list-group.collapse.show')[0] != null
+                    && item.parents('.list-group.collapse:not(.show)')[0] == null)
+                    || item.parent('.list-group-root')[0] != null) {
+                    item.addClass('list-group-item-last');
+                    break;
+                }
+            }
+        }
+
+        function setCollapseIcon() {
+
+            $(".list-group-item > i").each(function () {
+                if ($(this).parent(".collapsed")[0] != null) {
+                    $(this).removeClass('bi-chevron-down');
+                    $(this).addClass('bi-chevron-right');
+                } else {
+                    $(this).removeClass('bi-chevron-right');
+                    $(this).addClass('bi-chevron-down');
+                }
+            });
+        }
+
+        function showMessages(folderId, link) {
+
+            $('.list-group-item').removeClass('active');
+
+            link.addClass('active');
+
+            $.ajax({
+                    type: 'POST',
+                    url: "@Url.Action("EmailFolderMessages", "Folder")",
+                    data: {
+                        folderId: folderId
+                    },
+                    success: function (messagesView) {
+                                $('#messages').html(messagesView)
+                             },
+                    error: function (data) {
+                        alert(data.Message);
+                    },
+                    dataType: 'html'
+                }
+            );
+        }
+
+        function showFolderContent(folderId) {
+            $.ajax({
+                    type: 'POST',
+                    url: "@Url.Action("EmailFolderMessages", "Folder")",
+                    data: {
+                        folderId: folderId
+                    },
+                    success: function (messagesView) {
+                                $('#messages').html(messagesView)
+                             },
+                    error: function (data) {
+                        alert(data.Message);
+                    },
+                    dataType: 'html'
+                }
+            );
+        }
+
+        function showMessage(folderId, messageId) {
+            $.ajax({
+                    type: 'POST',
+                    url: "@Url.Action("EmailFolderMessage", "Folder")",
+                    data: {
+                        folderId: folderId,
+                        messageId: messageId
+                    },
+                    success: function (messageView) {
+                        $('#messages').html(messageView)
+                        $('iframe').contents().find('body').css({ "min-height": "100", "overflow": "hidden" });
+                        setInterval("$('iframe').height($('iframe').contents().find('body').height() + 20)", 1);
+                    },
+                    error: function (data) {
+                        alert(data.Message);
+                    },
+                    dataType: 'html'
+                }
+            );
+        }
+
+        function downloadAttachment(url, fileName) {
+            // Create a link element
+            var link = document.createElement("a");
+
+            // Set the link's href attribute to the file URL
+            link.href = url;
+
+            // Set the link's download attribute
+            link.download = fileName;
+
+            // Add the link to the DOM
+            document.body.appendChild(link);
+
+            // Trigger the download
+            link.click();
+
+            // Remove the link from the DOM
+            document.body.removeChild(link);
+        }
+
+    </script>
+}

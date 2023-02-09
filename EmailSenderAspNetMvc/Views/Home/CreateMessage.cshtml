@@ -1,0 +1,269 @@
+﻿@using EmailSenderAspNetMvc.Models.ViewModels
+@using EmailSenderAspNetMvc.Models.Domains
+
+@model EditEmailMessageViewModel
+
+@{
+    ViewBag.Title = Model.Heading;
+}
+
+<h2>@Model.Heading</h2>
+
+<div class="row">
+    <div class="col-lg-6">
+        @using (Html.BeginForm("CreateMessage", "Home", FormMethod.Post, new { id = "create-message-form", enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+
+            @Html.HiddenFor(x => x.EmailMessage.Id)
+            @Html.HiddenFor(x => x.EmailMessage.UserId)
+            @Html.HiddenFor(x => x.Save)
+            @Html.HiddenFor(x => x.Send)
+
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailMessage.EmailConfigurationId, new { @class = "mb-1" })
+                @Html.DropDownListFor(x => x.EmailMessage.EmailConfigurationId,
+                                        new SelectList(Model.EmailConfigurations, "Id", "Name"),
+                                        "-- Wybierz konto nadawcy --",
+                                        new { @class = "form-control" })
+                @Html.ValidationMessageFor(x => x.EmailMessage.EmailConfigurationId,
+                                            "",
+                                            new { @class = "text-danger" })
+            </div>
+
+
+
+            <div class="email-receivers">
+                @Html.Partial("_MessageReceivers",
+                                new EditEmailMessageReceiversViewModel
+                                {
+                                    EmailMessageReceiversTo = Model.EmailMessageReceiversTo,
+                                    EmailMessageReceiversCc = Model.EmailMessageReceiversCc,
+                                    EmailMessageReceiversBcc = Model.EmailMessageReceiversBcc
+                                })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailMessage.Subject,
+                                new { @class = "mb-1" })
+                @Html.TextBoxFor(x => x.EmailMessage.Subject, new { @class = "form-control" })
+                @Html.ValidationMessageFor(x => x.EmailMessage.Subject,
+                                            "",
+                                            new { @class = "text-danger" })
+            </div>
+
+            <div class="form-group mb-2">
+                @Html.LabelFor(x => x.EmailMessage.Content,
+                                new { @class = "mb-1" })
+                @Html.TextAreaFor(x => x.EmailMessage.Content,
+                                    new
+                                         {
+                                             @class = "form-control",
+                                            style = "height: 20em"
+                                         })
+                @Html.ValidationMessageFor(x => x.EmailMessage.Content,
+                                            "",
+                                            new { @class = "text-danger" })
+            </div>
+
+            <div class="email-attachments">
+                @Html.Partial("_MessageAttachments",
+                                Model)
+            </div>
+
+            <button class="btn btn-primary btn-lg mt-2 mb-5"
+                    type="button"
+                    id="send-button">
+                Wyślij
+            </button>
+
+            <button class="btn btn-primary btn-lg mt-2 mb-5"
+                    type="button"
+                    id="save-button">
+                Zapisz
+            </button>
+
+
+
+        }
+    </div>
+
+</div>
+
+@section Scripts
+{
+    <script type="text/javascript">
+
+
+        $(document).ready(function () {
+            $('button').click(function (e) {
+                e.stopPropagation();
+            });
+
+
+            $('#send-button').click(function (e) {
+
+                e.preventDefault();
+                $("#Send").attr("value","true");
+                $('#create-message-form').submit();
+            });
+
+            $('#save-button').click(function (e) {
+
+                e.preventDefault();
+                $("#Save").attr("value", "true");
+                $('#create-message-form').submit();
+            });
+        });
+
+
+
+
+        function updateValue(input, value) {
+            input.attr("value", value);
+        }
+
+
+        function addEmailReceiver(emailMessageReceiverType) {
+            let index;
+
+            switch (emailMessageReceiverType) {
+                case '@EmailMessageReceiverType.To':
+                    index = $(".email-receiver-to").length;
+                    break;
+                case '@EmailMessageReceiverType.CC':
+                    index = $(".email-receiver-cc").length;
+                    break;
+                case '@EmailMessageReceiverType.BCC':
+                    index = $(".email-receiver-bcc").length;
+                    break;
+            }
+
+            $.ajax({
+                    type: 'POST',
+                    url: "@Url.Action("AddMessageReceiver", "Home")",
+                    data: {
+                        index: index,
+                        messageId: @Model.EmailMessage.Id,
+                        emailMessageReceiverType: emailMessageReceiverType
+                    },
+                    success: function (receiverRow) {
+                                switch (emailMessageReceiverType) {
+                                    case '@EmailMessageReceiverType.To':
+                                        $("#btn-add-receiver-to").before(receiverRow);
+                                        break;
+                                    case '@EmailMessageReceiverType.CC':
+                                        $("#btn-add-receiver-cc").before(receiverRow);
+                                        break;
+                                    case '@EmailMessageReceiverType.BCC':
+                                        $("#btn-add-receiver-bcc").before(receiverRow);
+                                        break;
+                                }
+                             },
+                    error: function (data) {
+                        alert(data.Message);
+                    },
+                    dataType: 'html'
+                }
+            );
+
+
+        }
+
+
+        function deleteEmailReceiver(emailMessageReceiverRow) {
+            emailMessageReceiverRow.remove();
+            fixReceiversNames();
+        }
+
+        function fixReceiversNames() {
+            let toRows = $(".email-receiver-to")
+
+
+            if (toRows.length > 0) {
+
+                for (let i = 0; i < toRows.length; i++) {
+                    replaceIndex($(toRows[i]), i);
+                }
+            }
+
+            let ccRows = $(".email-receiver-cc")
+
+
+            if (ccRows.length > 0) {
+
+                for (let i = 0; i < ccRows.length; i++) {
+                    replaceIndex($(ccRows[i]), i);
+                }
+            }
+
+            let bccRows = $(".email-receiver-bcc")
+
+
+            if (bccRows.length > 0) {
+
+                for (let i = 0; i < bccRows.length; i++) {
+                    replaceIndex($(bccRows[i]), i);
+                }
+            }
+
+        }
+
+        function addAttachment() {
+            let index = $(".attachment").length;        
+
+            $.ajax({
+                    type: 'POST',
+                    url: "@Url.Action("AddAttachment", "Home")",
+                    data: {
+                        index: index
+                    },
+                    success: function (attachmentRow) {                    
+                                    $("#btn-add-attachment").before(attachmentRow);                           
+                    },
+                    error: function (data) {
+                        alert(data.Message);
+                    },
+                    dataType: 'html'
+                }
+            );
+
+
+        }
+
+        function deleteAttachment(attachmentRow) {
+            attachmentRow.remove();
+            fixAttachmentNames();
+        }
+
+        function fixAttachmentNames() {
+            let attachmentRows = $(".attachment")
+
+
+            if (attachmentRows.length > 0) {
+
+                for (let i = 0; i < attachmentRows.length; i++) {
+                    replaceIndex($(attachmentRows[i]), i);
+                }
+            }        
+
+        }
+
+        function replaceIndex(row, newIndex) {
+            let elements = row.find("input");
+            elements.each(function () {
+                let oldName = $(this).attr("name");
+                let indexPosition = oldName.indexOf("[") + 1;
+                let indexCharLength = oldName.indexOf("]") - indexPosition;
+                let oldIndex = oldName.substr(indexPosition, indexCharLength);
+                $(this).attr("name", $(this).attr("name").replace(oldIndex, newIndex));
+                $(this).attr("id", $(this).attr("id").replace(oldIndex, newIndex));
+                if (typeof $(this).attr("aria-describedby") == 'string')
+                    $(this).attr("aria-describedby", $(this).attr("aria-describedby").replace(oldIndex, newIndex));
+            });
+
+        }
+
+    </script>
+}

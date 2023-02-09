@@ -1,0 +1,237 @@
+﻿@using EmailSenderAspNetMvc.Models.ViewModels
+@using EmailSenderAspNetMvc.Models.Domains
+@using MailKit
+
+@model DisplayEmailFolderMessageViewModel
+
+
+<h3>
+
+    @FolderIcon(@Model.EmailFolder.Attributes)
+    @Model.EmailFolder.Name
+</h3>
+
+<div class="row">
+    <div class="col-10">
+        <button class="btn btn-sm btn-light"
+                onclick="showFolderContent(@Model.EmailFolder.Id)">
+            <i class="bi bi-arrow-left"></i>
+        </button>
+    </div>
+    <div class="col-2 text-end">
+        @(Model.EmailFolderMessage.Date.ToLocalTime().ToString("dd-MM-yyyy HH:mm"))
+    </div>
+</div>
+
+<hr />
+
+<div class="row">
+    <h5 class="mb-3">
+        @Model.EmailFolderMessage.Subject
+    </h5>
+</div>
+
+
+
+
+<div class="row">
+    <div class="col-12">
+
+        @if (!string.IsNullOrEmpty(Model.EmailFolderMessage.From.DisplayName))
+        {
+
+            <table>
+                <tr>
+                    <td class="fw-bold pe-2">Od:</td>
+                    <td>
+                        <span class="fw-bold">
+                            @Model.EmailFolderMessage.From.DisplayName
+                        </span>
+                        <span>
+                            &lt;@Model.EmailFolderMessage.From.Address&gt;
+                        </span>
+                    </td>
+                </tr>
+            </table>
+
+
+
+        }
+        else
+        {
+            <h3>
+                Od: @Model.EmailFolderMessage.From.Address
+            </h3>
+        }
+        <div>
+            @{
+                var receiversTo = Model.EmailFolderMessage
+                                             .EmailFolderMessageReceivers
+                                             .Where(x => x.EmailMessageReceiverType == EmailMessageReceiverType.To)
+                                             .ToList();
+                if (receiversTo.Any())
+                {
+                    <table>
+
+                        @for (int i = 0; i < receiversTo.Count; i++)
+                        {
+                            <tr>
+                                <td class="pe-2">
+                                    @if (i == 0)
+                                    {
+                                        <text>Do:</text>
+                                    }
+                                </td>
+                                <td>
+                                    @receiversTo[i].EmailAddress.AddressInfo
+                                </td>
+                            </tr>
+
+
+
+                        }
+                    </table>
+
+                }
+
+            }
+        </div>
+        <div>
+            @{
+                var receiversCc = Model.EmailFolderMessage
+                                             .EmailFolderMessageReceivers
+                                             .Where(x => x.EmailMessageReceiverType == EmailMessageReceiverType.CC)
+                                             .ToList();
+                if (receiversTo.Any())
+                {
+                    <table>
+
+                        @for (int i = 0; i < receiversCc.Count; i++)
+                        {
+                            <tr>
+                                <td class="pe-2">
+                                    @if (i == 0)
+                                    {
+                                        <text>DW:</text>
+                                    }
+                                </td>
+                                <td>
+                                    @receiversCc[i].EmailAddress.AddressInfo
+                                </td>
+                            </tr>
+                        }
+                    </table>
+                }
+            }
+
+        </div>
+        <div>
+            @{
+                var receiversBcc = Model.EmailFolderMessage
+                                             .EmailFolderMessageReceivers
+                                             .Where(x => x.EmailMessageReceiverType == EmailMessageReceiverType.BCC)
+                                             .ToList();
+                if (receiversTo.Any())
+                {
+                    <table>
+
+                        @for (int i = 0; i < receiversBcc.Count; i++)
+                        {
+                            <tr>
+                                <td class="pe-2">
+                                    @if (i == 0)
+                                    {
+                                        <text>UDW:</text>
+                                    }
+                                </td>
+                                <td>
+                                    @receiversBcc[i].EmailAddress.AddressInfo
+                                </td>
+                            </tr>
+
+
+
+                        }
+                    </table>
+
+                }
+
+            }
+
+        </div>
+    </div>
+
+
+</div>
+
+<hr />
+
+@if (Model.EmailFolderMessage.EmailFolderAttachments.Any())
+{
+    foreach (var attachment in Model.EmailFolderMessage.EmailFolderAttachments)
+    {
+        <button class="btn btn-light"
+                onclick="downloadAttachment('@Url.Action("EmailFolderAttachment", "Folder", new { attachmentId = attachment.Id })', '@attachment.FileName')">
+            @attachment.FileName
+        </button>
+    }
+    <hr />
+}
+
+
+
+<div class="row">
+
+    @if (Model.EmailFolderMessage.IsBodyHtml)
+    {
+        <iframe style="overflow-x: auto;" srcdoc="@Model.EmailFolderMessage.Body" class="col-12" />
+    }
+    else
+    {
+        <div class="col-12">
+            @Model.EmailFolderMessage.Body
+        </div>
+    }
+</div>
+
+
+@helper FolderIcon(FolderAttributes attributes)
+{
+    if (attributes.HasFlag(FolderAttributes.Inbox))
+    {
+        <i class="bi bi-inbox"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Flagged))
+    {
+        <i class="bi bi-star"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Sent))
+    {
+        <i class="bi bi-send"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Drafts))
+    {
+        <i class="bi bi-file-earmark"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Junk))
+    {
+        <i class="bi bi-exclamation-octagon"></i>
+    }
+    else if (attributes.HasFlag(FolderAttributes.Trash))
+    {
+        <i class="bi bi-trash"></i>
+    }
+    else if (attributes.HasFlag(FolderAttributes.All))
+    {
+        <i class="bi bi-envelope"></i>
+    }
+    else
+    {
+        <i class="bi bi-folder"></i>
+    }
+}
+

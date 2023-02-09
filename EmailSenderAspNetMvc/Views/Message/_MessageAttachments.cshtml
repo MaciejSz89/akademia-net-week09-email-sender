@@ -1,0 +1,53 @@
+﻿@using EmailSenderAspNetMvc.Models.ViewModels;
+
+@model EditEmailMessageViewModel
+
+@Html.LabelFor(x => x.Attachments,
+            new { @class = "mb-1" })
+
+@if (Model.EmailMessage.EmailAttachments.Count > 0)
+{
+
+
+    for (int i = 0; i < Model.EmailMessage.EmailAttachments.Count; i++)
+    {
+        <div class="row email-attachment">
+
+            @Html.Hidden("EmailMessage.EmailAttachments[" + i + "].Id",
+                         Model.EmailMessage.EmailAttachments.ElementAt(i).Id,
+                         new { @class = "email-attachment-id" })
+            @Html.Hidden("EmailMessage.EmailAttachments[" + i + "].EmailMessageId",
+                         Model.EmailMessage.EmailAttachments.ElementAt(i).EmailMessageId, 
+                         new { @class = "email-attachment-message-id" })
+            <div class="col-10">
+                @Html.TextBox("EmailMessage.EmailAttachments[" + i + "].FileName",
+                         Model.EmailMessage.EmailAttachments.ElementAt(i).FileName,
+                         new
+                         {
+                             @class = "form-control email-receiver-display-name mb-2",
+                             @readonly = "readonly"
+                         })
+            </div>
+            <div class="col-2">
+                <button type="button"
+                        class="btn btn-danger"
+                        onclick='deleteAttachment($(this).parents(".email-attachment"))'>
+                    Usuń
+                </button>
+            </div>
+        </div>
+    }
+
+
+
+}
+
+
+<div>
+    <button class="btn btn-secondary btn-sm"
+            id="btn-add-attachment"
+            type="button"
+            onclick='addAttachment()'>
+        Dodaj załącznik
+    </button>
+</div>

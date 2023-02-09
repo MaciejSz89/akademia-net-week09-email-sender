@@ -1,0 +1,147 @@
+﻿@using EmailSenderAspNetMvc.Models.ViewModels
+@using MailKit
+
+
+@model DisplayEmailFolderMessagesViewModel
+
+<h3>@FolderIcon(@Model.EmailFolder.Attributes) @Model.EmailFolder.Name</h3>
+
+<hr />
+
+@if ((Model.EmailMessageFolderMessages != null) && (Model.EmailMessageFolderMessages.Count > 0))
+{
+    <table class="table table-hover table-striped">
+        <thead>
+            <tr>
+                @if (Model.EmailFolder.Attributes.HasFlag(MailKit.FolderAttributes.Drafts)
+                  || Model.EmailFolder.Attributes.HasFlag(MailKit.FolderAttributes.Sent))
+                {
+                    <th scope="col">Do</th>
+                }
+                else
+                {
+                    <th scope="col">Od</th>
+                }
+
+                <th scope="col">Tytuł</th>
+                <th scope="col" style="min-width: 150px;">Data i godzina</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var message in Model.EmailMessageFolderMessages)
+            {
+                <tr onclick="showMessage(@Model.EmailFolder.Id, @message.Id)">
+                    <td>
+                        @if (Model.EmailFolder.Attributes.HasFlag(MailKit.FolderAttributes.Drafts)
+                        || Model.EmailFolder.Attributes.HasFlag(MailKit.FolderAttributes.Sent))
+                        {
+
+
+                            if (message.EmailFolderMessageReceivers != null && message.EmailFolderMessageReceivers.Count > 0)
+                            {
+
+                                var diplayedReceiversAmount = 2;
+
+                                for (int i = 0; i < message.EmailFolderMessageReceivers.Count; i++)
+                                {
+
+                                    if (!string.IsNullOrWhiteSpace(@message.EmailFolderMessageReceivers.ElementAt(i).EmailAddress.DisplayName))
+                                    {
+                                        <text>
+                                            @message.EmailFolderMessageReceivers.ElementAt(i).EmailAddress.AddressInfo
+                                        </text>
+                                    }
+                                    else
+                                    {
+                                        <text>
+                                            @message.EmailFolderMessageReceivers.ElementAt(i).EmailAddress.Address
+                                        </text>
+                                    }
+                                    if (i < message.EmailFolderMessageReceivers.Count - 1)
+                                    {
+                                        <text>;</text>
+                                    }
+
+                                    if (i + 1 == diplayedReceiversAmount
+                                        && diplayedReceiversAmount < @message.EmailFolderMessageReceivers.Count)
+                                    {
+                                        <text>+@(message.EmailFolderMessageReceivers.Count - diplayedReceiversAmount)</text>
+                                        break;
+                                    }
+                                    <br />
+                                }
+                            }
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrWhiteSpace(message.From.DisplayName))
+                            {
+                                @message.From.DisplayName
+                            }
+                            else
+                            {
+                                @message.From.Address
+                            }
+
+                        }
+
+
+                    </td>
+                    <td>
+                        @message.Subject
+                    </td>
+                    <td>
+                        @((message.Date.ToLocalTime()).ToString("dd-MM-yyyy HH:mm"))
+                    </td>
+                </tr>
+            }
+
+        </tbody>
+
+    </table>
+}
+else
+{
+    <h5>Ten folder jest pusty</h5>
+}
+
+
+@helper FolderIcon(FolderAttributes attributes)
+{
+    if (attributes.HasFlag(FolderAttributes.Inbox))
+    {
+        <i class="bi bi-inbox"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Flagged))
+    {
+        <i class="bi bi-star"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Sent))
+    {
+        <i class="bi bi-send"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Drafts))
+    {
+        <i class="bi bi-file-earmark"></i>
+    }
+
+    else if (attributes.HasFlag(FolderAttributes.Junk))
+    {
+        <i class="bi bi-exclamation-octagon"></i>
+    }
+    else if (attributes.HasFlag(FolderAttributes.Trash))
+    {
+        <i class="bi bi-trash"></i>
+    }
+    else if (attributes.HasFlag(FolderAttributes.All))
+    {
+        <i class="bi bi-envelope"></i>
+    }
+    else
+    {
+        <i class="bi bi-folder"></i>
+    }
+}
