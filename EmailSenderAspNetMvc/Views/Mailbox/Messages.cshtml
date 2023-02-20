@@ -2,13 +2,13 @@
 @using MailKit
 
 
-@model DisplayEmailFolderMessagesViewModel
+@model DisplayEmailMessagesViewModel
 
 <h3>@FolderIcon(@Model.EmailFolder.Attributes) @Model.EmailFolder.Name</h3>
 
 <hr />
 
-@if ((Model.EmailMessageFolderMessages != null) && (Model.EmailMessageFolderMessages.Count > 0))
+@if ((Model.EmailMessages != null) && (Model.EmailMessages.Count > 0))
 {
     <table class="table table-hover table-striped">
         <thead>
@@ -28,44 +28,54 @@
             </tr>
         </thead>
         <tbody>
-            @foreach (var message in Model.EmailMessageFolderMessages)
+            @foreach (var message in Model.EmailMessages)
             {
-                <tr onclick="showMessage(@Model.EmailFolder.Id, @message.Id)">
+                <tr 
+                    @if(Model.EmailFolder.Attributes.HasFlag(FolderAttributes.Drafts))
+                    {
+                        <text>onclick="window.location='@Url.Action("CreateMessage", "Message", new {emailMessageId=message.Id, emailFolderId = Model.EmailFolder.Id})'"</text>
+                    }
+                    else
+                    {
+                        <text>onclick="showMessage(@Model.EmailFolder.Id, @message.Id)"</text>
+                    }
+                    
+                    >
                     <td>
                         @if (Model.EmailFolder.Attributes.HasFlag(MailKit.FolderAttributes.Drafts)
                         || Model.EmailFolder.Attributes.HasFlag(MailKit.FolderAttributes.Sent))
                         {
 
 
-                            if (message.EmailFolderMessageReceivers != null && message.EmailFolderMessageReceivers.Count > 0)
+                            if (message.EmailMessageReceivers != null && message.EmailMessageReceivers.Count > 0)
                             {
 
                                 var diplayedReceiversAmount = 2;
 
-                                for (int i = 0; i < message.EmailFolderMessageReceivers.Count; i++)
+                                for (int i = 0; i < message.EmailMessageReceivers.Count; i++)
                                 {
 
-                                    if (!string.IsNullOrWhiteSpace(@message.EmailFolderMessageReceivers.ElementAt(i).EmailAddress.DisplayName))
+                                    if (!string.IsNullOrWhiteSpace(@message.EmailMessageReceivers.ElementAt(i).EmailAddress.DisplayName))
                                     {
                                         <text>
-                                            @message.EmailFolderMessageReceivers.ElementAt(i).EmailAddress.AddressInfo
+                                            @message.EmailMessageReceivers.ElementAt(i).EmailAddress.AddressInfo
                                         </text>
                                     }
                                     else
                                     {
                                         <text>
-                                            @message.EmailFolderMessageReceivers.ElementAt(i).EmailAddress.Address
+                                            @message.EmailMessageReceivers.ElementAt(i).EmailAddress.Address
                                         </text>
                                     }
-                                    if (i < message.EmailFolderMessageReceivers.Count - 1)
+                                    if (i < message.EmailMessageReceivers.Count - 1)
                                     {
                                         <text>;</text>
                                     }
 
                                     if (i + 1 == diplayedReceiversAmount
-                                        && diplayedReceiversAmount < @message.EmailFolderMessageReceivers.Count)
+                                        && diplayedReceiversAmount < @message.EmailMessageReceivers.Count)
                                     {
-                                        <text>+@(message.EmailFolderMessageReceivers.Count - diplayedReceiversAmount)</text>
+                                        <text>+@(message.EmailMessageReceivers.Count - diplayedReceiversAmount)</text>
                                         break;
                                     }
                                     <br />

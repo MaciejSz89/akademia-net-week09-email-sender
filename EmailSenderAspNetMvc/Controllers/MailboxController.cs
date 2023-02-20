@@ -8,43 +8,40 @@ using MailKit.Security;
 using Microsoft.Ajax.Utilities;
 using Microsoft.AspNet.Identity;
 using MimeKit;
-using Newtonsoft.Json;
-using Org.BouncyCastle.Asn1.Cms;
-using System;
 using System.Collections.Generic;
-using System.Collections.ObjectModel;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http.Headers;
-using System.Net.Mail;
-using System.Security.Cryptography;
-using System.Text;
-using System.Web;
 using System.Web.Mvc;
-using System.Web.Script.Serialization;
-using System.Web.Services.Description;
-using System.Web.UI.WebControls.WebParts;
 
 namespace EmailSenderAspNetMvc.Controllers
 {
     [Authorize]
-    public class FolderController : Controller
+    public class MailboxController : Controller
     {
         EmailConfigurationRepository _emailConfigurationRepository = new EmailConfigurationRepository();
         EmailFolderRepository _emailFolderRepository = new EmailFolderRepository();
         EmailMessageFolderPairRepository _emailFolderMessagePairRepository = new EmailMessageFolderPairRepository();
-        EmailFolderMessageRepository _emailFolderMessageRepository = new EmailFolderMessageRepository();
+        EmailMessageRepository _emailMessageRepository = new EmailMessageRepository();
         EmailAddressRepository _emailAddressRepository = new EmailAddressRepository();
-        EmailFolderAttachmentRepository _emailFolderAttachmentRepository = new EmailFolderAttachmentRepository();
+        EmailAttachmentRepository _emailAttachmentRepository = new EmailAttachmentRepository();
 
-        public ActionResult Folders()
+        public ActionResult Folders(string message = null)
         {
+            if (Session["EmailConfigurationId"] == null || (int)Session["EmailConfigurationId"] <= 0)
+                return RedirectToAction("SelectConfiguration", "Configuration");
 
             var userId = User.Identity.GetUserId();
-            Synchronize(_emailConfigurationRepository.GetEmailConfigurations(userId)[0], userId);
 
-            var model = _emailFolderRepository.GetFolders(_emailConfigurationRepository.GetEmailConfigurations(userId)[0]);
+
+            var emailConfigurationId = (int)Session["EmailConfigurationId"];
+
+            var emailConfiguration = _emailConfigurationRepository.GetEmailConfiguration(emailConfigurationId, userId);
+
+            Synchronize(emailConfiguration, userId);
+
+            var model = _emailFolderRepository.GetFolders(emailConfiguration);
+
+            ViewBag.Message = message;
 
             return View(model);
         }
@@ -53,36 +50,38 @@ namespace EmailSenderAspNetMvc.Controllers
         {
 
 
-            var imapClient = PrepareImapClient(emailConfiguration);
-            var imapFolders = SynchronizeFolders(imapClient,
-                                                 emailConfiguration.Id,
-                                                 userId);
+            using (var imapClient = PrepareImapClient(emailConfiguration))
+            {
+                var imapFolders = SynchronizeFolders(imapClient,
+                                                     emailConfiguration.Id,
+                                                     userId);
 
-            var imapFolderMessageUidsPairs = GetImapFolderUidsPairs(imapFolders);
+                var imapFolderMessageUidsPairs = GetImapFolderUidsPairs(imapFolders);
 
-            DetachOldMessagesFromFolders(imapFolderMessageUidsPairs,
-                                         emailConfiguration.Id,
-                                         userId);
+                DetachOldMessagesFromFolders(imapFolderMessageUidsPairs,
+                                             emailConfiguration.Id,
+                                             userId);
 
-            var newImapFolderUidsPairs = GetNewFolderUidsPairs(imapFolderMessageUidsPairs,
-                                                               emailConfiguration.Id,
-                                                               userId);
+                var newImapFolderUidsPairs = GetNewFolderUidsPairs(imapFolderMessageUidsPairs,
+                                                                   emailConfiguration.Id,
+                                                                   userId);
 
 
 
-            var newImapFolderMessagesPairs = SynchronizeMessages(newImapFolderUidsPairs,
-                                                                 emailConfiguration.Id,
-                                                                 userId);
+                var newImapFolderMessagesPairs = SynchronizeMessages(newImapFolderUidsPairs,
+                                                                     emailConfiguration.Id,
+                                                                     userId);
 
-            SynchronizeNewMesageFolderPairs(newImapFolderMessagesPairs,
-                                         emailConfiguration.Id,
-                                         userId);
+                SynchronizeNewMesageFolderPairs(newImapFolderMessagesPairs,
+                                                emailConfiguration.Id,
+                                                userId);
 
-            imapClient.Disconnect(true);
+                imapClient.Disconnect(true);
 
-            _emailFolderMessageRepository.DeleteFolderMessagesWithNoFolder(userId);
+                _emailMessageRepository.DeleteMessagesWithNoFolder(userId);
 
-            _emailAddressRepository.DeleteAllNotReferencedEmailAddresses(userId);
+                _emailAddressRepository.DeleteAllNotReferencedEmailAddresses(userId);
+            }
 
         }
 
@@ -182,15 +181,15 @@ namespace EmailSenderAspNetMvc.Controllers
                     var imapFolderMessageUid = (long)item.Item1.Id;
                     var imapMessageId = item.Item2.Envelope.MessageId;
 
-                    var messageId = _emailFolderMessageRepository.GetMessageId(imapMessageId,
+                    var messageId = _emailMessageRepository.GetMessageId(imapMessageId,
                                                                                emailConfigurationId,
                                                                                userId);
 
                     emailMessageFolderPairs.Add(new EmailMessageFolderPair
                     {
                         UserId = userId,
-                        EmailFolderMessageId = messageId,
-                        ImapFolderMessageUid = imapFolderMessageUid,
+                        EmailMessageId = messageId,
+                        ImapMessageUid = imapFolderMessageUid,
                         EmailFolderId = folderId
                     });
                 }
@@ -200,8 +199,8 @@ namespace EmailSenderAspNetMvc.Controllers
         }
 
         private IDictionary<IMailFolder, IList<(UniqueId, IMessageSummary)>> SynchronizeMessages(IDictionary<IMailFolder, IList<UniqueId>> imapFolderMessageUidsPairs,
-                                                                                     int emailConfigurationId,
-                                                                                     string userId)
+                                                                                                 int emailConfigurationId,
+                                                                                                 string userId)
         {
 
             var imapFolderMessagesDictionary = new Dictionary<IMailFolder, IList<(UniqueId, IMessageSummary)>>();
@@ -223,13 +222,14 @@ namespace EmailSenderAspNetMvc.Controllers
                                                                       MessageSummaryItems.Envelope |
                                                                       MessageSummaryItems.BodyStructure);
 
-                var emailFolderMessagesToAdd = ConvertImapMessageToEmailFolderMessage(imapFolder,
+
+                var emailMessagesToAdd = ConvertImapMessageToEmailFolderMessage(imapFolder,
                                                                                       imapMessageSummaries,
                                                                                       emailConfigurationId,
                                                                                       userId);
 
 
-                _emailFolderMessageRepository.AddFolderMessages(emailFolderMessagesToAdd);
+                _emailMessageRepository.AddMessages(emailMessagesToAdd);
 
 
                 imapFolderMessagesDictionary.Add(imapFolder,
@@ -249,8 +249,8 @@ namespace EmailSenderAspNetMvc.Controllers
 
 
         private IList<IMailFolder> SynchronizeFolders(ImapClient imapClient,
-                                              int emailConfigurationId,
-                                              string userId)
+                                                      int emailConfigurationId,
+                                                      string userId)
         {
 
             var imapFolders = GetFoldersFromImapServer(imapClient);
@@ -264,19 +264,19 @@ namespace EmailSenderAspNetMvc.Controllers
             return imapFolders;
 
         }
-        private IList<EmailFolderMessage> ConvertImapMessageToEmailFolderMessage(IMailFolder imapFolder,
-                                                                                 IList<IMessageSummary> imapMessageSummmaries,
-                                                                                 int emailConfigurationId,
-                                                                                 string userId)
+        private IList<EmailMessage> ConvertImapMessageToEmailFolderMessage(IMailFolder imapFolder,
+                                                                           IList<IMessageSummary> imapMessageSummmaries,
+                                                                           int emailConfigurationId,
+                                                                           string userId)
         {
-            var emailFolderMessages = new List<EmailFolderMessage>();
+            var emailMessages = new List<EmailMessage>();
             imapMessageSummmaries.ForEach(messageSummary =>
             {
-                var receivers = new List<EmailFolderMessageReceiver>();
+                var receivers = new List<EmailMessageReceiver>();
 
                 foreach (var receiverTo in messageSummary.Envelope.To.Mailboxes)
                 {
-                    receivers.Add(new EmailFolderMessageReceiver
+                    receivers.Add(new EmailMessageReceiver
                     {
                         UserId = userId,
                         EmailMessageReceiverType = EmailMessageReceiverType.To,
@@ -291,7 +291,7 @@ namespace EmailSenderAspNetMvc.Controllers
 
                 foreach (var receiverCc in messageSummary.Envelope.Cc.Mailboxes)
                 {
-                    receivers.Add(new EmailFolderMessageReceiver
+                    receivers.Add(new EmailMessageReceiver
                     {
                         UserId = userId,
                         EmailMessageReceiverType = EmailMessageReceiverType.CC,
@@ -306,7 +306,7 @@ namespace EmailSenderAspNetMvc.Controllers
 
                 foreach (var receiverBcc in messageSummary.Envelope.Bcc.Mailboxes)
                 {
-                    receivers.Add(new EmailFolderMessageReceiver
+                    receivers.Add(new EmailMessageReceiver
                     {
                         UserId = userId,
                         EmailMessageReceiverType = EmailMessageReceiverType.BCC,
@@ -328,7 +328,7 @@ namespace EmailSenderAspNetMvc.Controllers
 
 
 
-                var emailFolderMessage = new EmailFolderMessage
+                var emailMessage = new EmailMessage
                 {
                     From = new EmailAddress
                     {
@@ -338,7 +338,7 @@ namespace EmailSenderAspNetMvc.Controllers
                     },
                     EmailConfigurationId = emailConfigurationId,
                     UserId = userId,
-                    EmailFolderMessageReceivers = receivers,
+                    EmailMessageReceivers = receivers,
                     ImapMessageId = messageSummary.Envelope.MessageId,
                     Subject = messageSummary.Envelope.Subject,
                     Date = messageSummary.Date,
@@ -354,7 +354,7 @@ namespace EmailSenderAspNetMvc.Controllers
                     using (var ms = new MemoryStream())
                     {
 
-                     
+
 
                         var entity = imapFolder.GetBodyPart(messageSummary.UniqueId, attachment);
 
@@ -385,7 +385,7 @@ namespace EmailSenderAspNetMvc.Controllers
 
 
 
-                        emailFolderMessage.EmailFolderAttachments.Add(new EmailFolderAttachment
+                        emailMessage.EmailAttachments.Add(new EmailAttachment
                         {
                             UserId = userId,
                             FileName = fileName,
@@ -399,10 +399,10 @@ namespace EmailSenderAspNetMvc.Controllers
 
 
 
-                emailFolderMessages.Add(emailFolderMessage);
+                emailMessages.Add(emailMessage);
             });
 
-            return emailFolderMessages;
+            return emailMessages;
 
         }
 
@@ -417,7 +417,7 @@ namespace EmailSenderAspNetMvc.Controllers
 
         }
 
-        private List<EmailFolder> PrepareEmailFolders(int emailConfigurationId,
+        private IList<EmailFolder> PrepareEmailFolders(int emailConfigurationId,
                                                       string userId,
                                                       IList<IMailFolder> imapFolders)
         {
@@ -461,48 +461,49 @@ namespace EmailSenderAspNetMvc.Controllers
             return client;
         }
 
-        public ActionResult EmailFolderMessages(int folderId)
+        public ActionResult EmailMessages(int folderId)
         {
-            var vm = PrepareDisplayEmailFolderMessagesViewModel(folderId);
+            var vm = PrepareDisplayEmailMessagesViewModel(folderId);
 
 
-            return PartialView("FolderMessages", vm);
+            return PartialView("Messages", vm);
         }
 
-        public ActionResult EmailFolderMessage(int folderId, int messageId)
+        public ActionResult EmailMessage(int folderId, int messageId)
         {
-            var vm = PrepareDisplayEmailFolderMessageViewModel(folderId, messageId);
 
-            return PartialView("FolderMessage", vm);
+            var vm = PrepareDisplayEmailMessageViewModel(folderId, messageId);
+                        
+            return PartialView("Message", vm);
         }
 
-        public ActionResult EmailFolderAttachment(int attachmentId)
+        public ActionResult EmailAttachment(int attachmentId)
         {
             var userId = User.Identity.GetUserId();
-            var attachment = _emailFolderAttachmentRepository.GetAttachment(attachmentId, userId);
+            var attachment = _emailAttachmentRepository.GetAttachment(attachmentId, userId);
 
             return new FileContentResult(attachment.FileStream, attachment.FileName);
         }
 
 
-        private DisplayEmailFolderMessagesViewModel PrepareDisplayEmailFolderMessagesViewModel(int folderId)
+        private DisplayEmailMessagesViewModel PrepareDisplayEmailMessagesViewModel(int folderId)
         {
             var userId = User.Identity.GetUserId();
-            var vm = new DisplayEmailFolderMessagesViewModel
+            var vm = new DisplayEmailMessagesViewModel
             {
                 EmailFolder = _emailFolderRepository.GetFolder(folderId, userId),
-                EmailMessageFolderMessages = _emailFolderRepository.GetFolderMessages(folderId, userId)
+                EmailMessages = _emailFolderRepository.GetMessages(folderId, userId)
             };
             return vm;
         }
 
-        private DisplayEmailFolderMessageViewModel PrepareDisplayEmailFolderMessageViewModel(int folderId, int messageId)
+        private DisplayEmailMessageViewModel PrepareDisplayEmailMessageViewModel(int folderId, int messageId)
         {
             var userId = User.Identity.GetUserId();
-            var vm = new DisplayEmailFolderMessageViewModel
+            var vm = new DisplayEmailMessageViewModel
             {
                 EmailFolder = _emailFolderRepository.GetFolder(folderId, userId),
-                EmailFolderMessage = _emailFolderMessageRepository.GetMessage(messageId, userId)
+                EmailMessage = _emailMessageRepository.GetMessage(messageId, userId)
             };
             return vm;
         }

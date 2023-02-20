@@ -16,23 +16,22 @@ namespace EmailSenderAspNetMvc.Models.Domains
         public ApplicationUser()
         {
             EmailAddresses = new Collection<EmailAddress>();
-            EmailAttachments = new Collection<EmailAttachment>();
             EmailConfigurations = new Collection<EmailConfiguration>();
+            EmailFolders = new Collection<EmailFolder>();
             EmailMessages = new Collection<EmailMessage>();
-            EmailMessageReceivers = new Collection<EmailMessageReceiver>();
-            EmailFolderAttachments = new Collection<EmailFolderAttachment>();
+            EmailAttachments = new Collection<EmailAttachment>();
+            EmailMessageFolderPairs = new Collection<EmailMessageFolderPair>();
+
         }
 
         public string Name { get; set; }
 
         public ICollection<EmailAddress> EmailAddresses { get; set; }
-        public ICollection<EmailAttachment> EmailAttachments { get; set; }
         public ICollection<EmailConfiguration> EmailConfigurations { get; set; }
-        public ICollection<EmailMessage> EmailMessages { get; set; }
-        public ICollection<EmailMessageReceiver> EmailMessageReceivers { get; set; }
         public ICollection<EmailFolder> EmailFolders { get; set; }
+        public ICollection<EmailMessage> EmailMessages { get; set; }
         public ICollection<EmailMessageFolderPair> EmailMessageFolderPairs { get; set; }
-        public ICollection<EmailFolderAttachment> EmailFolderAttachments { get; set; }
+        public ICollection<EmailAttachment> EmailAttachments { get; set; }
 
 
 

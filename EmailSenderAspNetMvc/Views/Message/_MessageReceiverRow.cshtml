@@ -6,7 +6,7 @@
 @if (Model.ReceiverType == @EmailMessageReceiverType.To)
 {
     <div class="row email-receiver-to">
-        @Html.Hidden("EmailMessageReceiversTo[" + Model.ItemIndex.ToString() + "].Id",
+        @Html.Hidden("EmailFolderMessageReceiversTo[" + Model.ItemIndex.ToString() + "].Id",
                      "",
                      new { @class = "email-receiver-id" })
         @Html.Hidden("EmailMessageReceiversTo[" + Model.ItemIndex.ToString() + "].EmailMessageId",

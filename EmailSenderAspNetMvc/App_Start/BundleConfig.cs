@@ -9,6 +9,7 @@ namespace EmailSenderAspNetMvc
         public static void RegisterBundles(BundleCollection bundles)
         {
             bundles.Add(new Bundle("~/bundles/jquery").Include(
+                        "~/Scripts/jquery.cookie.js",
                         "~/Scripts/jquery-{version}.js"));
 
             bundles.Add(new Bundle("~/bundles/jqueryval").Include(

@@ -16,7 +16,6 @@ namespace EmailSenderAspNetMvc.Models.Domains
         {
             EmailConfigurations = new Collection<EmailConfiguration>();
             EmailMessageReceivers = new Collection<EmailMessageReceiver>();
-            EmailFolderMessageReceivers = new Collection<EmailFolderMessageReceiver>();
         }
         public int Id { get; set; }
 
@@ -47,6 +46,5 @@ namespace EmailSenderAspNetMvc.Models.Domains
         public ICollection<EmailConfiguration> EmailConfigurations { get; set; }
 
         public ICollection<EmailMessageReceiver> EmailMessageReceivers { get; set; }
-        public ICollection<EmailFolderMessageReceiver> EmailFolderMessageReceivers { get; set; }
     }
 }

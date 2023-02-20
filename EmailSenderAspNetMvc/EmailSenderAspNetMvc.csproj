@@ -192,7 +192,7 @@
     <Compile Include="Controllers\AccountController.cs" />
     <Compile Include="Controllers\AddressController.cs" />
     <Compile Include="Controllers\ConfigurationController.cs" />
-    <Compile Include="Controllers\FolderController.cs" />
+    <Compile Include="Controllers\MailboxController.cs" />
     <Compile Include="Controllers\HomeController.cs" />
     <Compile Include="Controllers\ManageController.cs" />
     <Compile Include="Controllers\MessageController.cs" />
@@ -203,34 +203,40 @@
     <Compile Include="Migrations\202302022216449_init.designer.cs">
       <DependentUpon>202302022216449_init.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202302162054265_202302162154.cs" />
+    <Compile Include="Migrations\202302162054265_202302162154.designer.cs">
+      <DependentUpon>202302162054265_202302162154.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202302162207473_202302162307.cs" />
+    <Compile Include="Migrations\202302162207473_202302162307.designer.cs">
+      <DependentUpon>202302162207473_202302162307.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202302192016307_202302192116.cs" />
+    <Compile Include="Migrations\202302192016307_202302192116.designer.cs">
+      <DependentUpon>202302192016307_202302192116.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
-    <Compile Include="Models\Domains\EmailAttachment.cs" />
     <Compile Include="Models\Domains\EmailAddress.cs" />
     <Compile Include="Models\Domains\EmailConfiguration.cs" />
     <Compile Include="Models\Domains\EmailFolder.cs" />
-    <Compile Include="Models\Domains\EmailFolderAttachment.cs" />
-    <Compile Include="Models\Domains\EmailFolderMessage.cs" />
-    <Compile Include="Models\Domains\EmailFolderMessageReceiver.cs" />
-    <Compile Include="Models\Repositories\EmailFolderAttachmentRepository.cs" />
-    <Compile Include="Models\Repositories\EmailMessageFolderPairRepository.cs" />
-    <Compile Include="Models\Repositories\EmailFolderMessageRepository.cs" />
-    <Compile Include="Models\Domains\EmailMessageFolderPair.cs" />
-    <Compile Include="Models\Domains\EmailMessageReceiver.cs" />
+    <Compile Include="Models\Domains\EmailAttachment.cs" />
     <Compile Include="Models\Domains\EmailMessage.cs" />
+    <Compile Include="Models\Domains\EmailMessageReceiver.cs" />
+    <Compile Include="Models\Repositories\EmailAttachmentRepository.cs" />
+    <Compile Include="Models\Repositories\EmailMessageFolderPairRepository.cs" />
+    <Compile Include="Models\Repositories\EmailMessageRepository.cs" />
+    <Compile Include="Models\Domains\EmailMessageFolderPair.cs" />
     <Compile Include="Models\Domains\EmailMessageReceiverType.cs" />
     <Compile Include="Models\Domains\FolderAttributeComparer.cs" />
     <Compile Include="Models\Repositories\EmailAddressRepository.cs" />
     <Compile Include="Models\Repositories\EmailConfigurationRepository.cs" />
     <Compile Include="Models\Repositories\EmailFolderRepository.cs" />
-    <Compile Include="Models\Repositories\EmailMessageAttachmentRepository.cs" />
-    <Compile Include="Models\Repositories\EmailMessageReceiverRepository.cs" />
-    <Compile Include="Models\Repositories\EmailMessageRepository.cs" />
     <Compile Include="Models\ViewModels\AddEmailMessageReceiverViewModel.cs" />
     <Compile Include="Models\ViewModels\AddPhoneNumberViewModel.cs" />
     <Compile Include="Models\ViewModels\ChangePasswordViewModel.cs" />
     <Compile Include="Models\Domains\ApplicationUser.cs" />
-    <Compile Include="Models\ViewModels\DisplayEmailFolderMessageViewModel.cs" />
-    <Compile Include="Models\ViewModels\DisplayEmailFolderMessagesViewModel.cs" />
+    <Compile Include="Models\ViewModels\DisplayEmailMessageViewModel.cs" />
+    <Compile Include="Models\ViewModels\DisplayEmailMessagesViewModel.cs" />
     <Compile Include="Models\ViewModels\EditEmailAddressViewModel.cs" />
     <Compile Include="Models\ViewModels\EditEmailConfigurationViewModel.cs" />
     <Compile Include="Models\ViewModels\EditEmailMessageReceiversViewModel.cs" />
@@ -2253,6 +2259,8 @@
     <Content Include="Scripts\jquery-3.6.1.slim.js" />
     <Content Include="Scripts\jquery-3.6.1.slim.min.js" />
     <None Include="Scripts\jquery.validate-vsdoc.js" />
+    <Content Include="Scripts\jquery.cookie-1.4.1.min.js" />
+    <Content Include="Scripts\jquery.cookie.js" />
     <Content Include="Scripts\jquery.js" />
     <Content Include="Scripts\jquery.min.js" />
     <Content Include="Scripts\jquery.validate.js" />
@@ -2295,18 +2303,17 @@
     <Content Include="Views\Shared\_LoginPartial.cshtml" />
     <Content Include="Views\Configuration\Configurations.cshtml" />
     <Content Include="Views\Configuration\Configuration.cshtml" />
-    <Content Include="Views\Message\CreateMessage.cshtml" />
-    <Content Include="Views\Message\_MessageReceivers.cshtml" />
-    <Content Include="Views\Message\MessageStatus.cshtml" />
-    <Content Include="Views\Message\DraftMessages.cshtml" />
-    <Content Include="Views\Message\_MessageAttachments.cshtml" />
-    <Content Include="Views\Message\_MessageReceiverRow.cshtml" />
-    <Content Include="Views\Message\_AttachmentRow.cshtml" />
     <Content Include="Views\Address\EmailAddresses.cshtml" />
     <Content Include="Views\Address\EmailAddress.cshtml" />
-    <Content Include="Views\Folder\Folders.cshtml" />
-    <Content Include="Views\Folder\FolderMessages.cshtml" />
-    <Content Include="Views\Folder\FolderMessage.cshtml" />
+    <Content Include="Views\Mailbox\Folders.cshtml" />
+    <Content Include="Views\Mailbox\Messages.cshtml" />
+    <Content Include="Views\Mailbox\Message.cshtml" />
+    <Content Include="Views\Message\CreateMessage.cshtml" />
+    <Content Include="Views\Message\_MessageReceivers.cshtml" />
+    <Content Include="Views\Message\_MessageReceiverRow.cshtml" />
+    <Content Include="Views\Message\_MessageAttachments.cshtml" />
+    <Content Include="Views\Message\_AttachmentRow.cshtml" />
+    <Content Include="Views\Configuration\SelectConfiguration.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
@@ -2347,6 +2354,15 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202302022216449_init.resx">
       <DependentUpon>202302022216449_init.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202302162054265_202302162154.resx">
+      <DependentUpon>202302162054265_202302162154.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202302162207473_202302162307.resx">
+      <DependentUpon>202302162207473_202302162307.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202302192016307_202302192116.resx">
+      <DependentUpon>202302192016307_202302192116.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <PropertyGroup>

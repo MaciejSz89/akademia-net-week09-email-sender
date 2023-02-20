@@ -13,12 +13,13 @@ namespace EmailSenderAspNetMvc.Controllers
     {
         EmailConfigurationRepository _emailConfigurationRepository = new EmailConfigurationRepository();
         EmailAddressRepository _emailAddressRepository = new EmailAddressRepository();
-        EmailMessageRepository _emailMessageRepository = new EmailMessageRepository();
-        EmailMessageAttachmentRepository _emailMessageAttachmentRepository = new EmailMessageAttachmentRepository();
 
         public ActionResult Index()
         {
-            return View();
+            if (Session["EmailConfigurationId"] == null || (int)Session["EmailConfigurationId"] <= 0)
+                return RedirectToAction("SelectConfiguration", "Configuration");
+
+            return RedirectToAction("Folders", "Mailbox");
         }
           
            

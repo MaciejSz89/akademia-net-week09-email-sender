@@ -6,10 +6,10 @@ using System.Web;
 
 namespace EmailSenderAspNetMvc.Models.ViewModels
 {
-    public class DisplayEmailFolderMessageViewModel
+    public class DisplayEmailMessageViewModel
     {
         public EmailFolder EmailFolder { get; set; }
 
-        public EmailFolderMessage EmailFolderMessage { get; set; }
+        public EmailMessage EmailMessage { get; set; }
     }
 }

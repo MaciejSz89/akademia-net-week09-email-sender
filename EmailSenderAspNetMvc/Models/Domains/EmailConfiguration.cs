@@ -57,8 +57,8 @@ namespace EmailSenderAspNetMvc.Models.Domains
         public ApplicationUser User { get; set; }
 
         public EmailAddress EmailAddress { get; set; }
-        public ICollection<EmailMessage> EmailMessages { get; set; }
         public ICollection<EmailFolder> EmailFolders { get; set; }
 
+        public ICollection<EmailMessage> EmailMessages { get; set; }
     }
 }

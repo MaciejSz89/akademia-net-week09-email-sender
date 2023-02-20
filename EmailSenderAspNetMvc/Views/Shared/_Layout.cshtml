@@ -34,13 +34,10 @@
                                 @Html.ActionLink("Książka adresowa", "EmailAddresses", "Address", null, new { @class = "dropdown-item" })
                             </li>
                             <li>
-                                @Html.ActionLink("Utwórz wiadomość", "CreateMessage", "Message", new { id = "" }, new { @class = "dropdown-item" })
+                                @Html.ActionLink("Utwórz wiadomość", "CreateMessage", "Message", null, new { @class = "dropdown-item" })
                             </li>
                             <li>
-                                @Html.ActionLink("Wersje robocze", "DraftMessages", "Message", null, new { @class = "dropdown-item" })
-                            </li>
-                            <li>
-                                @Html.ActionLink("Skrzynka pocztowa", "Folders", "Folder", null, new { @class = "dropdown-item" })
+                                @Html.ActionLink("Skrzynka pocztowa", "Folders", "Mailbox", null, new { @class = "dropdown-item" })
                             </li>
                         </ul>
                     </li>          
@@ -61,7 +58,7 @@
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; @DateTime.Now.Year - Wysyłanie maili</p>
+            <p>&copy; @DateTime.Now.Year - Poczta internetowa</p>
         </footer>
     </div>
 
@@ -69,7 +66,23 @@
     @Scripts.Render("~/bundles/bootstrap")
     @Scripts.Render("~/bundles/jqueryval")
 
+    <div class="privacyPoliceInfo" style="display: none;">
+        Serwis wykorzystuje pliki cookies. Korzystając ze strony wyrażasz zgodę na wykorzystanie plików cookies.
+        <button onclick="closePrivacyPolice()" type="button" class="btn btn-light privacyPoliceBtn">Ok, rozumiem</button>
+    </div>
 
+    <script>
+        function closePrivacyPolice() {
+            $('.privacyPoliceInfo').css("display", "none");
+            $.cookie("privacyPolicy", "1", { path: '/', expires: 365 });
+        }
+
+        $(document).ready(function () {
+            if ($.cookie("privacyPolicy") !== "1")
+                $('.privacyPoliceInfo').css("display", "");
+           
+        });
+    </script>
 
     @RenderSection("scripts", required: false)
 

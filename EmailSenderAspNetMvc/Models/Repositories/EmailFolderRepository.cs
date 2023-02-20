@@ -34,7 +34,7 @@ namespace EmailSenderAspNetMvc.Models.Repositories
             }
         }
 
-        public void UpdateFolders(int emailConfigurationId, string userId, List<EmailFolder> emailFolders)
+        public void UpdateFolders(int emailConfigurationId, string userId, IList<EmailFolder> emailFolders)
         {
             using (ApplicationDbContext context = new ApplicationDbContext())
             {
@@ -110,9 +110,9 @@ namespace EmailSenderAspNetMvc.Models.Repositories
                 context.SaveChanges();
 
                 foldersFromDb = context.EmailFolders
-                                             .Where(x => x.UserId == userId
-                                                      && x.EmailConfigurationId == emailConfigurationId)
-                                             .ToList();
+                                       .Where(x => x.UserId == userId
+                                                && x.EmailConfigurationId == emailConfigurationId)
+                                       .ToList();
 
 
                 foreach (var folder in foldersFromDb)
@@ -127,7 +127,7 @@ namespace EmailSenderAspNetMvc.Models.Repositories
 
 
 
-        public List<EmailFolderMessage> GetFolderMessages(int folderId, string userId)
+        public List<EmailMessage> GetMessages(int folderId, string userId)
         {
             using (ApplicationDbContext context = new ApplicationDbContext())
             {
@@ -136,14 +136,14 @@ namespace EmailSenderAspNetMvc.Models.Repositories
                                                               && x.EmailFolderId == folderId)
                                                      .AsQueryable();
 
-                var emailFolderMessages = context.EmailFolderMessages
+                var emailFolderMessages = context.EmailMessages
                                                  .Where(x => x.UserId == userId)
                                                  .Join(emailFolderMessagePairs,
                                                        x => x.Id,
-                                                       y => y.EmailFolderMessageId,
+                                                       y => y.EmailMessageId,
                                                        (x, y) => x)
                                                  .Include(x => x.From)
-                                                 .Include(x => x.EmailFolderMessageReceivers.Select(r => r.EmailAddress))
+                                                 .Include(x => x.EmailMessageReceivers.Select(r => r.EmailAddress))
                                                  .OrderByDescending(x => x.Date)
                                                  .ToList();
 
@@ -161,19 +161,6 @@ namespace EmailSenderAspNetMvc.Models.Repositories
             }
         }
 
-        //public List<long> GetFolderMessageUids(string folderFullName, string userId)
-        //{
-        //    using (ApplicationDbContext context = new ApplicationDbContext())
-        //    {
-        //        var folder = context.EmailFolders.Single(x => x.UserId == userId
-        //                                                 && x.FullName == folderFullName);
-
-        //        return context.EmailMessageFolderPairs.Where(x => x.UserId == userId
-        //                                                       && x.EmailFolderId == folder.Id)
-        //                                              .Select(x => x.Uid)
-        //                                              .ToList();
-        //    }
-        //}
 
         public int GetFolderId(string folderFullName,
                                int emailConfigurationId,
@@ -187,6 +174,13 @@ namespace EmailSenderAspNetMvc.Models.Repositories
             }
         }
 
-    
+        public string GetFolderFullName(int folderId, string userId)
+        {
+            using (ApplicationDbContext context = new ApplicationDbContext())
+            {
+                return context.EmailFolders.Single(x => x.UserId == userId
+                                                     && x.Id == folderId).FullName;
+            }
+        }
     }
 }

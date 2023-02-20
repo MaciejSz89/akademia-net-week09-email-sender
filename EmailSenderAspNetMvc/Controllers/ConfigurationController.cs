@@ -50,6 +50,29 @@ namespace EmailSenderAspNetMvc.Controllers
             };
             return RedirectToAction("Configurations");
         }
+
+
+
+        public ActionResult SelectConfiguration()
+        {
+            var userId = User.Identity.GetUserId();
+
+            var configurations = _emailConfigurationRepository.GetEmailConfigurations(userId);
+
+            return View(configurations);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult SelectConfiguration(int emailConfigurationId)
+        {
+            if (emailConfigurationId == 0)
+                return RedirectToAction("SelectConfiguration");
+
+            Session["EmailConfigurationId"] = emailConfigurationId;
+            return RedirectToAction("Folders", "Mailbox");
+        }
+
         private EmailConfiguration GetNewConfiguration(string userId)
         {
             return new EmailConfiguration

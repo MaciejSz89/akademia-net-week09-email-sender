@@ -92,8 +92,7 @@ namespace EmailSenderAspNetMvc.Models.Repositories
                 var addressesToDelete = context.EmailAddresses.Where(x => x.UserId == userId
                                                                        && x.EmailConfigurations.Count == 0
                                                                        && x.EmailMessageReceivers.Count == 0
-                                                                       && x.EmailFolderMessageReceivers.Count == 0
-                                                                       && !context.EmailFolderMessages.Any(y => y.UserId == userId
+                                                                       && !context.EmailMessages.Any(y => y.UserId == userId
                                                                                                              && y.FromId == x.Id)
                                                                        && !x.IsDefined);
                 context.EmailAddresses

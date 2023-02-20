@@ -1,0 +1,31 @@
+﻿@using EmailSenderAspNetMvc.Models.Domains
+
+@model IEnumerable<EmailConfiguration>
+
+@{
+    ViewBag.Title = "Wybór konfiguracji konta";
+}
+
+<h2>Wybór konfiguracji konta</h2>
+
+<div class="row">
+    <div class="col-lg-6">
+        @using (Html.BeginForm("SelectConfiguration", "Configuration", FormMethod.Post, new { id = "select-configuration-form", enctype = "multipart/form-data" }))
+        {
+            @Html.AntiForgeryToken()
+
+            <div>
+                @Html.DropDownList("EmailConfigurationId",
+                                   new SelectList(Model,
+                                                  "Id",
+                                                  "Name"),
+                                   "-- Wybierz konto --",
+                                   new { @class = "form-control" })
+            </div>
+
+            <button class="btn btn-primary btn-lg mt-2 mb-5" type="submit">
+                Wybierz
+            </button>
+        }
+    </div>
+</div>

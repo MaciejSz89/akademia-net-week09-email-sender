@@ -152,8 +152,20 @@
                         setCollapseIcon();
                     }
 
-
                 });
+
+                 @if (string.IsNullOrWhiteSpace(ViewBag.Message))
+                 {
+                     <text>
+                        $('.list-group-item')[0].click();
+                     </text>
+                 }
+                 else
+                 {
+                      <text>
+                        $('#messages').html('<h3>@ViewBag.Message</h3>');
+                      </text>
+                 }
             });
 
             $('.list-group-item').on('click', function () {
@@ -206,7 +218,7 @@
 
             $.ajax({
                     type: 'POST',
-                    url: "@Url.Action("EmailFolderMessages", "Folder")",
+                    url: "@Url.Action("EmailMessages", "Mailbox")",
                     data: {
                         folderId: folderId
                     },
@@ -224,7 +236,7 @@
         function showFolderContent(folderId) {
             $.ajax({
                     type: 'POST',
-                    url: "@Url.Action("EmailFolderMessages", "Folder")",
+                    url: "@Url.Action("EmailMessages", "Mailbox")",
                     data: {
                         folderId: folderId
                     },
@@ -242,7 +254,7 @@
         function showMessage(folderId, messageId) {
             $.ajax({
                     type: 'POST',
-                    url: "@Url.Action("EmailFolderMessage", "Folder")",
+                    url: "@Url.Action("EmailMessage", "Mailbox")",
                     data: {
                         folderId: folderId,
                         messageId: messageId
@@ -259,6 +271,8 @@
                 }
             );
         }
+
+        
 
         function downloadAttachment(url, fileName) {
             // Create a link element

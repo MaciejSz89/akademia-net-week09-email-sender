@@ -11,13 +11,13 @@ namespace EmailSenderAspNetMvc.Models.Domains
 
         public int Id { get; set; }
         public int EmailFolderId { get; set; }
-        public int EmailFolderMessageId { get; set; }
+        public int EmailMessageId { get; set; }
 
         public string UserId { get; set; }
 
-        public long ImapFolderMessageUid { get; set; }
+        public long ImapMessageUid { get; set; }
         public EmailFolder EmailFolder { get; set; }
-        public EmailFolderMessage EmailFolderMessage { get; set; }
+        public EmailMessage EmailMessage { get; set; }
 
         public ApplicationUser User { get; set; }
 

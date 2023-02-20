@@ -36,7 +36,7 @@ namespace EmailSenderAspNetMvc.Models.Repositories
                                                           .ToList();
 
                     var folderMessagePairsToDelete = folderMessagePairsFromDb.GroupJoin(uids,
-                                                                                        x => x.ImapFolderMessageUid,
+                                                                                        x => x.ImapMessageUid,
                                                                                         y => y,
                                                                                         (x, y) => new
                                                                                         {
@@ -82,7 +82,7 @@ namespace EmailSenderAspNetMvc.Models.Repositories
 
                     var newUids = uids.GroupJoin(folderMessagePairsFromDb,
                                                x => x,
-                                               y => y.ImapFolderMessageUid,
+                                               y => y.ImapMessageUid,
                                                (x, y) => new
                                                {
                                                    NewImapMessageUid = x,
@@ -126,7 +126,7 @@ namespace EmailSenderAspNetMvc.Models.Repositories
 
                 var newUids = uids.GroupJoin(folderMessagePairsFromDb,
                                            x => x,
-                                           y => y.ImapFolderMessageUid,
+                                           y => y.ImapMessageUid,
                                            (x, y) => new
                                            {
                                                NewImapMessageUid = x,
@@ -153,6 +153,17 @@ namespace EmailSenderAspNetMvc.Models.Repositories
             {
                 context.EmailMessageFolderPairs.AddRange(emailMessageFolderPairs);
                 context.SaveChanges();
+            }
+        }
+
+        public long GetImapMessageUid(int messageId, int folderId)
+        {
+            using (ApplicationDbContext context = new ApplicationDbContext())
+            {
+                return context.EmailMessageFolderPairs
+                              .Single(x => x.EmailMessageId == messageId 
+                                        && x.EmailFolderId == folderId)                                                      
+                              .ImapMessageUid;
             }
         }
     }

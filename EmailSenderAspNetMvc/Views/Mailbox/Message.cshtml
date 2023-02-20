@@ -2,7 +2,7 @@
 @using EmailSenderAspNetMvc.Models.Domains
 @using MailKit
 
-@model DisplayEmailFolderMessageViewModel
+@model DisplayEmailMessageViewModel
 
 
 <h3>
@@ -19,7 +19,7 @@
         </button>
     </div>
     <div class="col-2 text-end">
-        @(Model.EmailFolderMessage.Date.ToLocalTime().ToString("dd-MM-yyyy HH:mm"))
+        @(Model.EmailMessage.Date.ToLocalTime().ToString("dd-MM-yyyy HH:mm"))
     </div>
 </div>
 
@@ -27,7 +27,7 @@
 
 <div class="row">
     <h5 class="mb-3">
-        @Model.EmailFolderMessage.Subject
+        @Model.EmailMessage.Subject
     </h5>
 </div>
 
@@ -37,7 +37,7 @@
 <div class="row">
     <div class="col-12">
 
-        @if (!string.IsNullOrEmpty(Model.EmailFolderMessage.From.DisplayName))
+        @if (!string.IsNullOrEmpty(Model.EmailMessage.From.DisplayName))
         {
 
             <table>
@@ -45,10 +45,10 @@
                     <td class="fw-bold pe-2">Od:</td>
                     <td>
                         <span class="fw-bold">
-                            @Model.EmailFolderMessage.From.DisplayName
+                            @Model.EmailMessage.From.DisplayName
                         </span>
                         <span>
-                            &lt;@Model.EmailFolderMessage.From.Address&gt;
+                            &lt;@Model.EmailMessage.From.Address&gt;
                         </span>
                     </td>
                 </tr>
@@ -60,15 +60,15 @@
         else
         {
             <h3>
-                Od: @Model.EmailFolderMessage.From.Address
+                Od: @Model.EmailMessage.From.Address
             </h3>
         }
         <div>
             @{
-                var receiversTo = Model.EmailFolderMessage
-                                             .EmailFolderMessageReceivers
-                                             .Where(x => x.EmailMessageReceiverType == EmailMessageReceiverType.To)
-                                             .ToList();
+                var receiversTo = Model.EmailMessage
+                                       .EmailMessageReceivers
+                                       .Where(x => x.EmailMessageReceiverType == EmailMessageReceiverType.To)
+                                       .ToList();
                 if (receiversTo.Any())
                 {
                     <table>
@@ -98,10 +98,10 @@
         </div>
         <div>
             @{
-                var receiversCc = Model.EmailFolderMessage
-                                             .EmailFolderMessageReceivers
-                                             .Where(x => x.EmailMessageReceiverType == EmailMessageReceiverType.CC)
-                                             .ToList();
+                var receiversCc = Model.EmailMessage
+                                       .EmailMessageReceivers
+                                       .Where(x => x.EmailMessageReceiverType == EmailMessageReceiverType.CC)
+                                       .ToList();
                 if (receiversTo.Any())
                 {
                     <table>
@@ -127,10 +127,10 @@
         </div>
         <div>
             @{
-                var receiversBcc = Model.EmailFolderMessage
-                                             .EmailFolderMessageReceivers
-                                             .Where(x => x.EmailMessageReceiverType == EmailMessageReceiverType.BCC)
-                                             .ToList();
+                var receiversBcc = Model.EmailMessage
+                                        .EmailMessageReceivers
+                                        .Where(x => x.EmailMessageReceiverType == EmailMessageReceiverType.BCC)
+                                        .ToList();
                 if (receiversTo.Any())
                 {
                     <table>
@@ -166,12 +166,15 @@
 
 <hr />
 
-@if (Model.EmailFolderMessage.EmailFolderAttachments.Any())
+@if (Model.EmailMessage.EmailAttachments.Any())
 {
-    foreach (var attachment in Model.EmailFolderMessage.EmailFolderAttachments)
+    foreach (var attachment in Model.EmailMessage.EmailAttachments)
     {
         <button class="btn btn-light"
-                onclick="downloadAttachment('@Url.Action("EmailFolderAttachment", "Folder", new { attachmentId = attachment.Id })', '@attachment.FileName')">
+                onclick="downloadAttachment('@Url.Action("EmailAttachment", 
+                                                         "Mailbox", 
+                                                         new { attachmentId = attachment.Id })',
+                                                         '@attachment.FileName')">
             @attachment.FileName
         </button>
     }
@@ -182,14 +185,14 @@
 
 <div class="row">
 
-    @if (Model.EmailFolderMessage.IsBodyHtml)
+    @if (Model.EmailMessage.IsBodyHtml)
     {
-        <iframe style="overflow-x: auto;" srcdoc="@Model.EmailFolderMessage.Body" class="col-12" />
+        <iframe style="overflow-x: auto;" srcdoc="@Model.EmailMessage.Body" class="col-12" />
     }
     else
     {
         <div class="col-12">
-            @Model.EmailFolderMessage.Body
+            @Model.EmailMessage.Body
         </div>
     }
 </div>

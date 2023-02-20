@@ -17,22 +17,8 @@
 
             @Html.HiddenFor(x => x.EmailMessage.Id)
             @Html.HiddenFor(x => x.EmailMessage.UserId)
-            @Html.HiddenFor(x => x.Save)
-            @Html.HiddenFor(x => x.Send)
-
-
-            <div class="form-group mb-2">
-                @Html.LabelFor(x => x.EmailMessage.EmailConfigurationId, new { @class = "mb-1" })
-                @Html.DropDownListFor(x => x.EmailMessage.EmailConfigurationId,
-                                        new SelectList(Model.EmailConfigurations, "Id", "Name"),
-                                        "-- Wybierz konto nadawcy --",
-                                        new { @class = "form-control" })
-                @Html.ValidationMessageFor(x => x.EmailMessage.EmailConfigurationId,
-                                            "",
-                                            new { @class = "text-danger" })
-            </div>
-
-
+            @Html.HiddenFor(x => x.EmailMessage.EmailConfigurationId)
+            @Html.HiddenFor(x => x.EmailFolderId)
 
             <div class="email-receivers">
                 @Html.Partial("_MessageReceivers",
@@ -54,15 +40,15 @@
             </div>
 
             <div class="form-group mb-2">
-                @Html.LabelFor(x => x.EmailMessage.Content,
+                @Html.LabelFor(x => x.EmailMessage.Body,
                                 new { @class = "mb-1" })
-                @Html.TextAreaFor(x => x.EmailMessage.Content,
+                @Html.TextAreaFor(x => x.EmailMessage.Body,
                                     new
                                          {
                                              @class = "form-control",
                                             style = "height: 20em"
                                          })
-                @Html.ValidationMessageFor(x => x.EmailMessage.Content,
+                @Html.ValidationMessageFor(x => x.EmailMessage.Body,
                                             "",
                                             new { @class = "text-danger" })
             </div>
@@ -73,23 +59,23 @@
             </div>
 
             <button class="btn btn-primary btn-lg mt-2 mb-5"
-                    type="button"
-                    id="send-button">
+                    type="submit"
+                    name="submitButton"
+                    value="Send">
                 Wyślij
             </button>
 
             <button class="btn btn-primary btn-lg mt-2 mb-5"
-                    type="button"
-                    id="save-button">
+                    type="submit"
+                    name="submitButton"
+                    value="Save">
                 Zapisz
             </button>
 
-
-
         }
     </div>
-
 </div>
+
 
 <!-- Modal Add Defined Receiver To -->
 <div class="modal fade"
@@ -250,19 +236,6 @@
             });
 
 
-            $('#send-button').click(function (e) {
-
-                e.preventDefault();
-                $("#Send").attr("value","true");
-                $('#create-message-form').submit();
-            });
-
-            $('#save-button').click(function (e) {
-
-                e.preventDefault();
-                $("#Save").attr("value", "true");
-                $('#create-message-form').submit();
-            });
         });
 
 
@@ -272,7 +245,6 @@
 
         function addEmailReceiver(emailMessageReceiverType, emailAddressId) {
             let index;
-
             switch (emailMessageReceiverType) {
                 case '@EmailMessageReceiverType.To':
                     index = $(".email-receiver-to").length;
@@ -356,7 +328,8 @@
 
         }
 
-        function addAttachment() {
+
+         function addAttachment() {
             let index = $(".attachment").length;
 
             $.ajax({
@@ -391,6 +364,16 @@
 
                 for (let i = 0; i < attachmentRows.length; i++) {
                     replaceIndex($(attachmentRows[i]), i);
+                }
+            }
+
+            let emailAttachmentRows = $(".email-attachment")
+
+
+            if (emailAttachmentRows.length > 0) {
+
+                for (let i = 0; i < emailAttachmentRows.length; i++) {
+                    replaceIndex($(emailAttachmentRows[i]), i);
                 }
             }
 

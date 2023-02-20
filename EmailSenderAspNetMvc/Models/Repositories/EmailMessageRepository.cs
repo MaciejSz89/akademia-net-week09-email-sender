@@ -1,4 +1,5 @@
 ﻿using EmailSenderAspNetMvc.Models.Domains;
+using Microsoft.Ajax.Utilities;
 using System;
 using System.Collections.Generic;
 using System.Data.Entity;
@@ -9,146 +10,110 @@ namespace EmailSenderAspNetMvc.Models.Repositories
 {
     public class EmailMessageRepository
     {
-        EmailAddressRepository _emailAddressRepository = new EmailAddressRepository();
-        EmailMessageAttachmentRepository _emailMessageAttachmentRepository = new EmailMessageAttachmentRepository();
-        EmailMessageReceiverRepository _emailMessageReceiverRepository = new EmailMessageReceiverRepository();
-        public void DeleteEmailMessageReceiver(int messageId, int receiverId, string userId)
-        {
-            using (ApplicationDbContext context = new ApplicationDbContext())
-            {
-                var receiverToDelete = context.EmailMessageReceivers.Single(x => x.UserId == userId
-                                                                              && x.EmailMessageId == messageId
-                                                                              && x.Id == receiverId);
 
-
-                context.EmailMessageReceivers.Remove(receiverToDelete);
-
-                context.SaveChanges();
-            }
-
-            _emailAddressRepository.DeleteAllNotReferencedEmailAddresses(userId);
-
-        }
-
-        public void AddEmailMessage(EmailMessage emailMessage)
-        {
-            using (ApplicationDbContext context = new ApplicationDbContext())
-            {
-                context.EmailMessages.Add(emailMessage);
-                context.SaveChanges();
-            }
-        }
-
-        public void UpdateEmailMessage(EmailMessage emailMessage)
+        public void DeleteMessagesWithNoFolder(string userId)
         {
             using (ApplicationDbContext context = new ApplicationDbContext())
             {
 
-                _emailMessageReceiverRepository.UpdateEmailMessageReceivers(emailMessage.Id,
-                                                                            emailMessage.UserId,
-                                                                            emailMessage.EmailMessageReceivers);
 
-                _emailMessageAttachmentRepository.UpdateEmailMessageAttachments(emailMessage.Id,
-                                                                                emailMessage.UserId,
-                                                                                emailMessage.EmailAttachments);
-                var messageToUpdate = context.EmailMessages
-                                                        .Include(x => x.EmailMessageReceivers)
-                                                        .Include(x => x.EmailAttachments)
-                                                        .Single(x => x.UserId == emailMessage.UserId
-                                                                  && x.Id == emailMessage.Id);
+                var messagesToDeleteIds = context.EmailMessages.Where(x => x.UserId == userId
+                                                                            && !context.EmailMessageFolderPairs
+                                                                                       .Any(y => y.UserId == userId
+                                                                                              && y.EmailMessageId == x.Id))
+                                                                     .Select(x => x.Id).ToList();
+                
 
-
-
-                foreach (var attachment in emailMessage.EmailAttachments)
+                messagesToDeleteIds.ForEach(x =>
                 {
-                    if (attachment.Id != 0)
-                    {
-                        var attachmentToUpdate = messageToUpdate.EmailAttachments
-                                                    .Single(x => x.Id == attachment.Id);
-                        attachmentToUpdate.FileName = attachment.FileName;
-                    }
-                    else
-                    {
-                        messageToUpdate.EmailAttachments.Add(attachment);
-                    }
-                }
+                    var receiversToDelete = context.EmailMessageReceivers.Where(y => y.EmailMessageId == x);
+                    var attachmentsToDelete = context.EmailAttachments.Where(y => y.EmailMessageId == x);
 
-                messageToUpdate.EmailConfigurationId = emailMessage.EmailConfigurationId;
-                messageToUpdate.Subject = emailMessage.Subject;
-                messageToUpdate.Content = emailMessage.Content;
-                messageToUpdate.SaveDate = DateTime.Now;
+                    context.EmailMessageReceivers.RemoveRange(receiversToDelete);
+                    context.EmailAttachments.RemoveRange(attachmentsToDelete);
 
-                context.SaveChanges();
-
-
-                _emailAddressRepository.DeleteAllNotReferencedEmailAddresses(emailMessage.UserId);
-            }
-
-
-        }
-
-        public List<EmailMessage> GetDraftEmailMessages(string userId)
-        {
-            using (ApplicationDbContext context = new ApplicationDbContext())
-            {
-                var messages = context.EmailMessages.Where(x => x.UserId == userId)
-                                      .Include(x => x.EmailConfiguration)
-                                      .Include(x => x.EmailConfiguration.EmailAddress)
-                                      .Include(x => x.EmailMessageReceivers)
-                                      .Include(x => x.EmailMessageReceivers.Select(y => y.EmailAddress))
-                                      .Include(x => x.EmailAttachments)
-                                      .ToList();
-
-                messages.ForEach(x =>
-                {
-                    x.EmailMessageReceivers = x.EmailMessageReceivers
-                                               .OrderBy(y => y.EmailMessageReceiverType)
-                                               .ToList();
                 });
 
-                return messages;
-            }
-        }
-
-        public void DeleteEmailMessage(int id, string userId)
-        {
-            using (ApplicationDbContext context = new ApplicationDbContext())
-            {
-                var messageToDelete = context.EmailMessages
-                                             .Include(x => x.EmailMessageReceivers)
-                                             .Single(x => x.UserId == userId
-                                                       && x.Id == id);
-
-
+                var messagesToDelete = context.EmailMessages.Where(x => x.UserId == userId
+                                                                            && !context.EmailMessageFolderPairs
+                                                                                       .Any(y => y.UserId == userId
+                                                                                              && y.EmailMessageId == x.Id));
 
                 context.EmailMessages
-                       .Remove(messageToDelete);
+                       .RemoveRange(messagesToDelete);
 
                 context.SaveChanges();
             }
-
-            _emailAddressRepository.DeleteAllNotReferencedEmailAddresses(userId);
-
         }
 
-        public EmailMessage GetEmailMessage(int id, string userId)
+        public void AddMessages(IList<EmailMessage> emailMessagesToAdd)
         {
             using (ApplicationDbContext context = new ApplicationDbContext())
             {
+                foreach (var emailMessage in emailMessagesToAdd)
+                {
+                    var messageExists = context.EmailMessages.Any(x => x.ImapMessageId == emailMessage.ImapMessageId);
 
-                var message = context.EmailMessages
-                                           .Include(x => x.EmailMessageReceivers)
-                                           .Include(x => x.EmailMessageReceivers.Select(y => y.EmailAddress))
-                                           .Include(x => x.EmailAttachments)
-                                           .Include(x => x.EmailConfiguration)
-                                           .Include(x => x.EmailConfiguration.EmailAddress)
-                                           .Single(x => x.UserId == userId
-                                                     && x.Id == id);
+                    if (!messageExists)
+                    {
+                        context.EmailMessages.Add(emailMessage);
+                        continue;
+                    }
 
-                return message;
+                    if (context.EmailMessages
+                               .Single(x => x.ImapMessageId == emailMessage.ImapMessageId).Date != emailMessage.Date)
+                        UpdateMessage(emailMessage, context);
+                }
+                context.SaveChanges();
+            }
+        }
 
+        private void UpdateMessage(EmailMessage emailMessage,
+                                         ApplicationDbContext context)
+        {
+
+
+            var messageToUpdate = context.EmailMessages.Single(x => x.ImapMessageId == emailMessage.ImapMessageId);
+
+            var receiversToDelete = context.EmailMessageReceivers
+                                           .Where(x => x.EmailMessageId == messageToUpdate.Id)
+                                           .ToList();
+
+            context.EmailMessageReceivers.RemoveRange(receiversToDelete);
+
+            messageToUpdate.From = emailMessage.From;
+            messageToUpdate.EmailMessageReceivers = emailMessage.EmailMessageReceivers;
+            messageToUpdate.Date = emailMessage.Date;
+            messageToUpdate.Subject = emailMessage.Subject;
+            messageToUpdate.Flags = emailMessage.Flags;
+
+        }
+
+        public int GetMessageId(string messageId,
+                                int emailConfigurationId,
+                                string userId)
+        {
+            using (ApplicationDbContext context = new ApplicationDbContext())
+            {
+                return context.EmailMessages
+                              .Single(x => x.UserId == userId
+                                        && x.EmailConfigurationId == emailConfigurationId
+                                        && x.ImapMessageId == messageId)
+                              .Id;
+            }
+        }
+
+        public EmailMessage GetMessage(int messageId, string userId)
+        {
+            using (ApplicationDbContext context = new ApplicationDbContext())
+            {
+                return context.EmailMessages
+                              .Include(x => x.From)
+                              .Include(x => x.EmailMessageReceivers.Select(y => y.EmailAddress))
+                              .Include(x => x.EmailAttachments)
+                              .Single(x => x.UserId == userId
+                                        && x.Id == messageId);
             }
         }
     }
 }
-
